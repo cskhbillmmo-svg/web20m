@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin · Kinglove69</title>
+    <link rel="stylesheet" href="./admin.css" />
+  </head>
+  <body>
+    <header class="admin-header">
+      <div class="admin-brand">
+        <strong>Kinglove69</strong>
+        <span>Admin</span>
+      </div>
+      <nav class="admin-tabs" role="tablist">
+        <button class="tab is-active" data-tab="votes" type="button">VOTE</button>
+        <button class="tab" data-tab="users" type="button">Users</button>
+        <button class="tab" data-tab="transactions" type="button">Giao dịch</button>
+        <button class="tab" data-tab="notifications" type="button">Thông báo</button>
+        <button class="tab" data-tab="dashboard" type="button">Dashboard</button>
+      </nav>
+      <div class="admin-user">
+        <span data-admin-name>—</span>
+        <button class="logout-btn" type="button" data-action="admin-logout">Đăng xuất</button>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      <!-- ===== VOTE TAB ===== -->
+      <section class="tab-panel is-active" data-panel="votes">
+        <div class="panel-head">
+          <h1>Quản lý VOTE</h1>
+          <button class="btn-primary" type="button" data-action="open-create-round">+ Tạo round mới</button>
+        </div>
+
+        <div class="filter-chips" data-vote-filter>
+          <button class="chip is-active" data-filter="all" type="button">Tất cả</button>
+          <button class="chip" data-filter="1" type="button">VOTE 1</button>
+          <button class="chip" data-filter="2" type="button">VOTE 2</button>
+          <button class="chip" data-filter="3" type="button">VOTE 3</button>
+        </div>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>Round đang mở / chờ settle</h2>
+            <label class="auto-refresh">
+              <input type="checkbox" data-auto-refresh checked />
+              <span>Tự refresh 15s</span>
+            </label>
+          </div>
+          <div class="rounds-grid" data-open-rounds>
+            <p class="muted">Đang tải…</p>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>Phân bố cược · Quick settle</h2>
+            <span class="muted" data-current-round-label>(chưa chọn round)</span>
+          </div>
+          <div class="choice-distribution" data-choice-dist>
+            <p class="muted">Chọn round bên trên để xem phân bố cược</p>
+          </div>
+          <div class="settle-bar" data-settle-bar hidden>
+            <label>Hoặc tùy chỉnh: <input type="text" data-settle-winning placeholder="A / B / 1 / 2 …" /></label>
+            <button class="btn-danger" type="button" data-action="settle-round">Settle round</button>
+            <span class="muted" data-settle-hint></span>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>Bets chi tiết</h2>
+            <span class="muted" data-bet-count>—</span>
+          </div>
+          <div class="bets-table-wrap">
+            <table class="bets-table" data-bets-table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>User</th>
+                  <th>Choice</th>
+                  <th class="num">Amount</th>
+                  <th>Status</th>
+                  <th class="num">Payout</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody data-bets-body>
+                <tr><td colspan="7" class="muted">Chọn round bên trên để xem bets</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Tất cả round gần đây</h2>
+          <div class="bets-table-wrap">
+            <table class="bets-table">
+              <thead>
+                <tr>
+                  <th>VOTE</th>
+                  <th>Round</th>
+                  <th>Status</th>
+                  <th class="num">×</th>
+                  <th class="num">Bets</th>
+                  <th class="num">Total</th>
+                  <th>Winning</th>
+                  <th>Mở lúc</th>
+                </tr>
+              </thead>
+              <tbody data-all-rounds-body>
+                <tr><td colspan="8" class="muted">Đang tải…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- ===== USERS TAB ===== -->
+      <section class="tab-panel" data-panel="users" hidden>
+        <div class="panel-head">
+          <h1>Người dùng</h1>
+          <input class="search-input" type="search" placeholder="Tìm username…" data-user-search />
+        </div>
+        <section class="card">
+          <div class="bets-table-wrap">
+            <table class="bets-table">
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th class="num">Balance</th>
+                  <th class="num">Vote pts</th>
+                  <th>Ngày tạo</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody data-users-body>
+                <tr><td colspan="6" class="muted">Đang tải…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- ===== NOTIFICATIONS TAB ===== -->
+      <section class="tab-panel" data-panel="notifications" hidden>
+        <div class="panel-head">
+          <h1>Thông báo hệ thống</h1>
+        </div>
+
+        <section class="card">
+          <h2>Gửi thông báo mới</h2>
+          <form class="notif-form" data-notif-form>
+            <label>Tiêu đề
+              <input name="title" required placeholder="VD: Bảo trì hệ thống" />
+            </label>
+            <label>Nội dung
+              <textarea name="body" required rows="4" placeholder="Nội dung thông báo..."></textarea>
+            </label>
+            <label>Đối tượng
+              <select name="audience">
+                <option value="all">Tất cả user</option>
+                <option value="user">Một user cụ thể</option>
+              </select>
+            </label>
+            <label data-notif-user-row hidden>Username
+              <input name="username" placeholder="VD: demo8" />
+            </label>
+            <button class="btn-primary" type="submit">Gửi thông báo</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>Thông báo đã gửi</h2>
+            <button class="btn-link" type="button" data-action="reload-notifs">Tải lại</button>
+          </div>
+          <div class="bets-table-wrap">
+            <table class="bets-table">
+              <thead>
+                <tr>
+                  <th>Tiêu đề</th>
+                  <th>Nội dung</th>
+                  <th>Đối tượng</th>
+                  <th>Gửi lúc</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody data-notifs-body>
+                <tr><td colspan="5" class="muted">Đang tải…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- ===== TRANSACTIONS TAB ===== -->
+      <section class="tab-panel" data-panel="transactions" hidden>
+        <div class="panel-head">
+          <h1>Giao dịch</h1>
+          <div class="filter-chips" data-tx-filter>
+            <button class="chip is-active" data-tx-status="pending" type="button">Chờ duyệt</button>
+            <button class="chip" data-tx-status="success" type="button">Đã duyệt</button>
+            <button class="chip" data-tx-status="all" type="button">Tất cả</button>
+          </div>
+        </div>
+        <section class="card">
+          <div class="bets-table-wrap">
+            <table class="bets-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Loại</th>
+                  <th class="num">Số tiền</th>
+                  <th>Ghi chú</th>
+                  <th>Status</th>
+                  <th>Tạo lúc</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody data-tx-body>
+                <tr><td colspan="7" class="muted">Đang tải…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- ===== DASHBOARD TAB ===== -->
+      <section class="tab-panel" data-panel="dashboard" hidden>
+        <h1>Tổng quan</h1>
+        <div class="stat-grid">
+          <div class="stat-card"><span>Tổng user</span><strong data-stat="user_count">—</strong></div>
+          <div class="stat-card"><span>Round đang mở</span><strong data-stat="open_rounds">—</strong></div>
+          <div class="stat-card"><span>Bets hôm nay</span><strong data-stat="bets_today">—</strong></div>
+          <div class="stat-card"><span>Tổng cược (đ)</span><strong data-stat="amount_today">—</strong></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Create-round modal -->
+    <dialog class="modal" data-modal="create-round">
+      <form method="dialog">
+        <h3>Tạo round mới</h3>
+        <label>VOTE type
+          <select name="vote_type" required>
+            <option value="1">VOTE 1</option>
+            <option value="2">VOTE 2</option>
+            <option value="3">VOTE 3</option>
+          </select>
+        </label>
+        <label>Round no
+          <input name="round_no" required placeholder="VD: 20260515-001" />
+        </label>
+        <label>Hệ số nhân (multiplier)
+          <input name="multiplier" type="number" step="0.1" min="1" value="2" required />
+        </label>
+        <label>Đóng lúc (tùy chọn)
+          <input name="close_at" type="datetime-local" />
+        </label>
+        <div class="modal-actions">
+          <button type="button" data-action="close-modal">Hủy</button>
+          <button class="btn-primary" type="button" data-action="submit-create-round">Tạo</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="admin-toast" data-toast hidden></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script src="./admin.js"></script>
+  </body>
+</html>

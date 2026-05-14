@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ví tiền Kinglove69</title>
+    <link rel="stylesheet" href="./profile.css" />
+  </head>
+  <body>
+    <main class="app-screen">
+      <section class="wallet-page" data-available="2573790" data-frozen="0">
+        <header class="wallet-hero">
+          <div class="wallet-title">
+            <a class="wallet-back" href="./profile.html" aria-label="Quay lại"></a>
+            <h1>Ví tiền</h1>
+          </div>
+          <button class="wallet-eye" aria-label="Ẩn hiện số dư">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12Z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </button>
+
+          <section class="asset-summary" aria-label="Tổng tài sản">
+            <span>Tổng tài sản</span>
+            <strong><span data-total>0</span> đ</strong>
+          </section>
+
+          <div class="asset-boxes">
+            <section class="asset-box">
+              <span>Khả dụng</span>
+              <strong><span data-available-text>0</span> đ</strong>
+            </section>
+            <section class="asset-box">
+              <span>Đóng băng</span>
+              <strong><span data-frozen-text>0</span> đ</strong>
+            </section>
+          </div>
+        </header>
+
+        <section class="wallet-actions">
+          <button class="wallet-action deposit" type="button">
+            <span aria-hidden="true">↓</span>
+            <span>Nạp tiền</span>
+          </button>
+          <button class="wallet-action withdraw" type="button">
+            <span aria-hidden="true">↑</span>
+            <span>Rút tiền</span>
+          </button>
+        </section>
+
+        <section class="history-section">
+          <div class="section-head">
+            <h2>Lịch sử giao dịch</h2>
+          </div>
+          <div data-tx-list>
+            <p style="padding:20px;text-align:center;color:#9aa0ac">Đang tải…</p>
+          </div>
+        </section>
+
+        <!-- Modals: deposit & withdraw -->
+        <dialog data-modal="deposit" class="wallet-modal">
+          <form method="dialog">
+            <h3>Yêu cầu nạp tiền</h3>
+            <p class="modal-note">Số tiền (đ) — admin sẽ duyệt sau khi xác nhận chuyển khoản</p>
+            <input type="number" name="amount" min="10000" step="1000" placeholder="VD: 100000" required />
+            <textarea name="note" rows="2" placeholder="Ghi chú (mã giao dịch / ngân hàng)"></textarea>
+            <div class="modal-row">
+              <button type="button" data-close>Hủy</button>
+              <button type="button" data-submit-deposit class="primary">Gửi yêu cầu</button>
+            </div>
+          </form>
+        </dialog>
+
+        <dialog data-modal="withdraw" class="wallet-modal">
+          <form method="dialog">
+            <h3>Yêu cầu rút tiền</h3>
+            <p class="modal-note">Yêu cầu sẽ trừ vào số dư khi admin duyệt</p>
+            <input type="number" name="amount" min="10000" step="1000" placeholder="VD: 100000" required />
+            <textarea name="note" rows="2" placeholder="Ghi chú"></textarea>
+            <div class="modal-row">
+              <button type="button" data-close>Hủy</button>
+              <button type="button" data-submit-withdraw class="primary">Gửi yêu cầu</button>
+            </div>
+          </form>
+        </dialog>
+
+        <nav class="bottom-nav bottom-nav--wallet" aria-label="Điều hướng chính">
+          <a href="./home.html" class="nav-item">
+            <span class="nav-icon home"></span>
+            <span>Trang chủ</span>
+          </a>
+          <a href="#" class="nav-item">
+            <span class="nav-icon clock"></span>
+            <span>Lịch sử</span>
+          </a>
+          <a href="#" class="nav-item">
+            <span class="nav-icon box"></span>
+            <span>Đơn hàng</span>
+          </a>
+          <a href="./wallet.html" class="nav-item is-active-blue">
+            <span class="nav-icon card"></span>
+            <span>Ví tiền</span>
+          </a>
+          <a href="./profile.html" class="nav-item">
+            <span class="nav-icon user"></span>
+            <span>Cá nhân</span>
+          </a>
+        </nav>
+      </section>
+    </main>
+
+    <script src="./nav-scroll.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script src="./wallet.js"></script>
+  </body>
+</html>

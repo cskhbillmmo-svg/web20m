@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thông tin tài khoản</title>
+    <link rel="stylesheet" href="./profile.css" />
+  </head>
+  <body>
+    <main class="app-screen">
+      <section class="account-info-page">
+        <header class="account-info-hero">
+          <a class="header-back" href="./profile.html" aria-label="Quay lại"></a>
+          <h1>Thông tin tài khoản</h1>
+
+          <div class="account-info-summary">
+            <span class="summary-label">Số điểm Vote</span>
+            <strong class="summary-value" data-vote-total>0.00K</strong>
+            <p class="summary-caption">Công thức tính số điểm Vote bé nhận được</p>
+          </div>
+        </header>
+
+        <section class="stats-grid" aria-label="Thống kê điểm">
+          <div class="stat-cell">
+            <strong data-stat="vote">0K</strong>
+            <span>Số điểm Vote</span>
+          </div>
+          <div class="stat-cell">
+            <strong data-stat="advance">0K</strong>
+            <span>Số điểm tạm ứng</span>
+          </div>
+          <div class="stat-cell">
+            <strong data-stat="auto">0K</strong>
+            <span>Số điểm tự động</span>
+          </div>
+          <div class="stat-cell">
+            <strong data-stat="kid">0K</strong>
+            <span>Số điểm Vote của bé</span>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script>
+      (async function () {
+        if (!window.sb) return;
+        const { data: { user } } = await window.sb.auth.getUser();
+        if (!user) return;
+        const { data: p } = await window.sb.from("profiles").select("*").eq("id", user.id).maybeSingle();
+        if (!p) return;
+        const fmt = (n) => (Number(n || 0) / 1000).toFixed(2) + "K";
+        const fmtShort = (n) => Math.round(Number(n || 0) / 1000) + "K";
+        document.querySelector("[data-vote-total]").textContent = fmt(p.vote_points);
+        document.querySelector('[data-stat="vote"]').textContent = fmtShort(p.vote_points);
+        document.querySelector('[data-stat="advance"]').textContent = fmtShort(p.advance_points);
+        document.querySelector('[data-stat="auto"]').textContent = fmtShort(p.auto_points);
+        document.querySelector('[data-stat="kid"]').textContent = fmtShort(p.kid_points);
+      })();
+    </script>
+  </body>
+</html>

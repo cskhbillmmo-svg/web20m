@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thông tin tài khoản nhận tiền</title>
+    <link rel="stylesheet" href="./profile.css" />
+  </head>
+  <body>
+    <main class="app-screen">
+      <section class="link-bank-page">
+        <header class="page-header">
+          <a class="header-back" href="./profile.html" aria-label="Quay lại"></a>
+          <h1>Thông tin tài khoản nhận tiền</h1>
+        </header>
+
+        <!-- Mode A: existing bank info -->
+        <ul class="info-list" data-bank-list hidden>
+          <li>
+            <div class="info-row">
+              <span class="info-label">Ngân hàng</span>
+              <span class="info-value" data-bank-name>—</span>
+            </div>
+          </li>
+          <li>
+            <div class="info-row">
+              <span class="info-label">Số tài khoản</span>
+              <span class="info-value" data-bank-acc>—</span>
+            </div>
+          </li>
+          <li>
+            <div class="info-row">
+              <span class="info-label">Chủ tài khoản</span>
+              <span class="info-value" data-bank-holder>—</span>
+            </div>
+          </li>
+        </ul>
+
+        <button type="button" class="add-bank-card" data-action="show-bank-form" data-no-bank hidden>
+          <span class="add-bank-plus" aria-hidden="true">+</span>
+          <span>Nhấn để thêm tài khoản nhận tiền</span>
+        </button>
+
+        <!-- Mode B: add bank form -->
+        <form class="bank-form" data-bank-form hidden>
+          <h3>Thêm tài khoản nhận tiền</h3>
+          <label>
+            <span>Tên ngân hàng</span>
+            <input name="bank_name" placeholder="VD: Vietcombank" required />
+          </label>
+          <label>
+            <span>Số tài khoản</span>
+            <input name="account_number" placeholder="VD: 1234567890" required inputmode="numeric" />
+          </label>
+          <label>
+            <span>Chủ tài khoản (chữ in HOA)</span>
+            <input name="account_holder" placeholder="VD: NGUYEN VAN A" required />
+          </label>
+          <div class="bank-form__actions">
+            <button type="button" data-cancel-bank-form>Hủy</button>
+            <button type="submit" class="primary">Lưu</button>
+          </div>
+        </form>
+
+        <p class="link-note">
+          Nhắc nhở : Vui lòng liên kết thông tin ngân hàng khớp với thông tin tài khoản ngân hàng. Nếu liên kết không khớp cần liên hệ bộ phận CSKH để hỗ trợ xác minh lại thông tin. Cảm ơn !
+        </p>
+
+        <div class="toast toast--center" role="status" aria-live="polite" hidden>
+          <span class="toast__icon" aria-hidden="true">!</span>
+          <span class="toast__text"></span>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script src="./link-bank.js"></script>
+  </body>
+</html>

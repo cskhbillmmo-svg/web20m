@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thông báo hệ thống</title>
+    <link rel="stylesheet" href="./profile.css" />
+  </head>
+  <body>
+    <main class="app-screen">
+      <section class="notifications-page">
+        <header class="page-header">
+          <a class="header-back" href="./profile.html" aria-label="Quay lại"></a>
+          <h1>Thông báo hệ thống</h1>
+        </header>
+
+        <div data-notif-list></div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script>
+      (async function () {
+        const list = document.querySelector("[data-notif-list]");
+        if (!window.sb) {
+          list.innerHTML = '<p style="padding:18px;color:#9aa0ac">Supabase chưa cấu hình</p>';
+          return;
+        }
+        const { data: { user } } = await window.sb.auth.getUser();
+        let query = window.sb.from("notifications").select("*").order("created_at", { ascending: false });
+        if (user) query = query.or(`audience.eq.all,user_id.eq.${user.id}`);
+        else query = query.eq("audience", "all");
+        const { data, error } = await query;
+        if (error || !data?.length) {
+          list.innerHTML = '<p style="padding:18px;color:#9aa0ac;text-align:center">Chưa có thông báo nào</p>';
+          return;
+        }
+        const fmt = (iso) => new Date(iso).toLocaleString("sv-SE").replace("T", " ");
+        list.innerHTML = data.map((n) => `
+          <article class="notification-card">
+            <h2>${escapeHtml(n.title)}</h2>
+            <p>${escapeHtml(n.body).replace(/\n/g, "<br>")}</p>
+            <time datetime="${n.created_at}">${fmt(n.created_at)}</time>
+          </article>
+        `).join("");
+      })();
+
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, (c) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        }[c]));
+      }
+    </script>
+  </body>
+</html>

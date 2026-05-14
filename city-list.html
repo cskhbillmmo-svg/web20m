@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>THÁI BÌNH</title>
+    <link rel="stylesheet" href="./city-list.css" />
+  </head>
+  <body>
+    <main class="app-screen">
+      <section class="city-page">
+        <header class="top-nav">
+          <a class="back-button" href="./choose.html" aria-label="Quay lại"></a>
+          <h1 data-city-title>THÁI BÌNH</h1>
+        </header>
+
+        <section class="grid-list" aria-label="Danh sách mã">
+          <a class="grid-item" href="#"><span class="image-error"></span><strong>A05</strong></a>
+          <a class="grid-item" href="#"><span class="image-error"></span><strong>B05</strong></a>
+          <a class="grid-item" href="#"><span class="image-error"></span><strong>C05</strong></a>
+          <a class="grid-item" href="#"><span class="image-error"></span><strong>D05</strong></a>
+          <a class="grid-item" href="#"><span class="image-error"></span><strong>E05</strong></a>
+          <a class="grid-item" href="#"><span class="image-error"></span><strong>F05</strong></a>
+          <a class="grid-item" href="#"><span class="image-error"></span><strong>G05</strong></a>
+          <a class="grid-item" href="#"><span class="image-error"></span><strong>H05</strong></a>
+          <a class="grid-item" href="#"><span class="image-error"></span><strong>I05</strong></a>
+          <a class="grid-item" href="#"><span class="image-error"></span><strong>J05</strong></a>
+          <a class="grid-item" href="#"><span class="image-error"></span><strong>K05</strong></a>
+          <a class="grid-item" href="#"><span class="image-error"></span><strong>L05</strong></a>
+          <a class="grid-item" href="#"><span class="image-error"></span><strong>M05</strong></a>
+          <a class="grid-item" href="#"><span class="image-error"></span><strong>N05</strong></a>
+          <a class="grid-item" href="#"><span class="image-error"></span><strong>O05</strong></a>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const title = new URLSearchParams(location.search).get("name");
+      if (title) {
+        document.querySelector("[data-city-title]").textContent = title.trim();
+        document.title = title.trim();
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,91 @@
+-- =====================================================================
+-- Bulk seed videos cho Rạp chiếu (run trong Supabase SQL Editor)
+-- Idempotent: dùng on conflict (external_id) do update để re-seed an toàn
+-- =====================================================================
+
+insert into public.videos (external_id, category_id, title, cover, play_count, is_popular, popular_rank) values
+  -- Popular (NO.1 / NO.2 / NO.3)
+  (17950, 1, 'Em gái áo màu xanh dâm dục!', 'https://lsbzytp.com:3519/upload/vod/20231130-1/56781ca51d5b3e0136480a1b52265241.jpg', 7903, true, 1),
+  (16172, 1, 'Ngà Ngứa tập 02', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-23/12/ou33pbvpimo1202ou33pbvpimo2310671.jpg', 329, true, 2),
+  (15910, 1, 'Em gái trong sáng Tập 02', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-14/12/x5las3e5j3z1211x5las3e5j3z356326.jpg', 524, true, 3),
+
+  -- Việt nam (tab 1)
+  (17948, 1, 'Điều tra viên bị nghi phạm', 'https://lsbzytp.com:3519/upload/vod/20231130-1/3ca344e772cdeff092349fba7b2b643f.jpg', 5972, false, null),
+  (16170, 1, 'Gieo màu xanh xuống biển! (1)', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-14/12/2xkp52i53kf12102xkp52i53kf266164.jpg', 242, false, null),
+  (16169, 1, 'Gieo màu xanh xuống biển! (2)', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-14/12/zo2vjxmchi11210zo2vjxmchi1276166.jpg', 28, false, null),
+  (16168, 1, 'Gieo màu xanh xuống biển! (3)', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-14/12/jatcdue4eb11210jatcdue4eb1276168.jpg', 337, false, null),
+  (16167, 1, 'Gieo màu xanh xuống biển! (4)', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-14/12/zxrlfihhzc31210zxrlfihhzc3286170.jpg', 533, false, null),
+  (16166, 1, 'Lái xe già dắt em gái Tập 03', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-14/12/uvwny0wef4r1210uvwny0wef4r556234.jpg', 995, false, null),
+  (16165, 1, 'Lái xe già dắt em gái Tập 02', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-14/12/lq0d5untote1210lq0d5untote566236.jpg', 923, false, null),
+  (16164, 1, 'Lái xe già dắt em gái Tập 01', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-14/12/bbw0jiqw5tq1210bbw0jiqw5tq576238.jpg', 180, false, null),
+  (16163, 1, 'Dì tư nhà sếp Tập 02', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-14/12/5rb3zuvdjsv12115rb3zuvdjsv046254.jpg', 5, false, null),
+  (16162, 1, 'Dì tư nhà sếp Tập 01', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-14/12/jl5cedp3cy21211jl5cedp3cy2056256.jpg', 625, false, null),
+  (16129, 1, 'Giấc mơ tột đỉnh tập 13', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-14/12/o43ni4zccod1210o43ni4zccod296172.jpg', 985, false, null),
+  (14589, 1, 'ABS-199 Bộ Sưu Tập Karen Aoki 07', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-25/00/5n2qmc1jbhe00035n2qmc1jbhe0912831.jpg', 144, false, null),
+  (14588, 1, 'ABS-199 Karen Aoki Phục Vụ 06', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-25/00/cpdxrpluckp0003cpdxrpluckp1012835.jpg', 941, false, null),
+  (14587, 1, 'ABS-199 Karen Aoki Phục Vụ 05', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-25/00/xfdjwxbbly40003xfdjwxbbly41112839.jpg', 913, false, null),
+  (14586, 1, 'ABS-199 Karen Aoki Phục Vụ 04', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-25/00/cffk4bbk4s20003cffk4bbk4s21212843.jpg', 570, false, null),
+  (14585, 1, 'ABS-199 Karen Aoki Phục Vụ 03', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-25/00/diugfa2qacp0003diugfa2qacp1212847.jpg', 344, false, null),
+  (14584, 1, 'ABS-199 Karen Aoki Phục Vụ 02', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-25/00/ogeoja35hge0003ogeoja35hge1312851.jpg', 663, false, null),
+  (14583, 1, 'ABS-199 Karen Aoki Phục Vụ 01', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-25/00/204rtpiu1bp0003204rtpiu1bp1412855.jpg', 717, false, null),
+  (11011, 1, 'Thể Dục Dụng Cụ Mới Bài 4', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/05/dxjvd5gwr3u0500dxjvd5gwr3u1013166.jpg', 505, false, null),
+  (11010, 1, 'Thể Dục Dụng Cụ Mới Bài 3', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/05/nrpjfksq45p0500nrpjfksq45p2613184.jpg', 653, false, null),
+  (11009, 1, 'Thể Dục Dụng Cụ Mới Bài 2', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/05/langqnmefgi0500langqnmefgi4213202.jpg', 533, false, null),
+  (11008, 1, 'Thể Dục Dụng Cụ Mới Bài 1', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/05/5qrask31s0q05005qrask31s0q5713220.jpg', 888, false, null),
+  (10973, 1, 'Thể dục nhịp điệu Etude.2', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/04/q4hmwqs1qoo0459q4hmwqs1qoo3813130.jpg', 512, false, null),
+  (9657,  1, 'Beastly New Humanity Tập 01', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-22/00/geptq4g3vka0058geptq4g3vka408871.jpg', 688, false, null),
+  (9656,  1, 'Beastly New Humanity Tập 02', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-22/00/5jdy3yr0a5000585jdy3yr0a50398869.jpg', 286, false, null),
+  (9614,  1, 'Vol.03 Chiến tranh giữa các vì sao', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-22/00/obmmgvmdihl0058obmmgvmdihl388867.jpg', 147, false, null),
+  (9613,  1, 'Vol.04 Chiến tranh giữa các vì sao', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-22/00/jfrckxq4c2s0058jfrckxq4c2s378865.jpg', 23, false, null),
+  (9612,  1, 'Vol.05 Người mới tham gia', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-22/00/i1v2merlrsv0058i1v2merlrsv368863.jpg', 819, false, null),
+  (9524,  1, 'Final Fantasy VII Yuffie Kisaragi', 'https://lbfm.lbpictupian.com/upload/vod/2020/01-12/13/rgha0ggebao1303rgha0ggebao16361.jpg', 604, false, null),
+  (9024,  1, 'Người mới chơi AV Mirai', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/03/rl35j4l42hs0326rl35j4l42hs044959.jpg', 992, false, null),
+  (7959,  1, 'Chiến binh thiêng Inma-6', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/05/oumclbcrj2g0501oumclbcrj2g1313238.jpg', 496, false, null),
+  (7958,  1, 'Thánh chiến binh Inma-5', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/05/ruppxgvoyi20501ruppxgvoyi22913256.jpg', 522, false, null),
+  (7919,  1, 'Huyền thoại tục tĩu-4', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/05/ukykn3vc5ih0501ukykn3vc5ih4513274.jpg', 721, false, null),
+  (7918,  1, 'Huyền thoại tục tĩu-3', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/05/f4mm5jqsgbi0502f4mm5jqsgbi0113292.jpg', 920, false, null),
+  (7917,  1, 'Huyền thoại tục tĩu-2', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/05/i03olh5qzxe0502i03olh5qzxe1613310.jpg', 772, false, null),
+  (7916,  1, 'Truyền thuyết tục tĩu-1', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/05/lghwjvvfw2j0502lghwjvvfw2j3213328.jpg', 969, false, null),
+  (7650,  1, 'RBD-927 Lâu đài nô lệ Vol.06', 'https://lbfm.lbpictupian.com/upload/vod/2020/05-01/00/gpjamxuga1x0002gpjamxuga1x4431148.jpg', 93, false, null),
+  (7649,  1, 'RBD-927 Lâu đài nô lệ Vol.05', 'https://lbfm.lbpictupian.com/upload/vod/2020/05-01/00/tphou20rtam0002tphou20rtam3631094.jpg', 828, false, null),
+  (7648,  1, 'RBD-927 Lâu đài nô lệ Vol.04', 'https://lbfm.lbpictupian.com/upload/vod/2020/05-01/00/wowzju22bv30002wowzju22bv33731100.jpg', 580, false, null),
+  (7647,  1, 'RBD-927 Lâu đài nô lệ Vol.03', 'https://lbfm.lbpictupian.com/upload/vod/2020/05-01/00/5dv15kfujmf00025dv15kfujmf3831106.jpg', 982, false, null),
+  (7646,  1, 'RBD-927 Lâu đài nô lệ Vol.02', 'https://lbfm.lbpictupian.com/upload/vod/2020/05-01/00/hynl45t15ze0002hynl45t15ze3931112.jpg', 955, false, null),
+  (7645,  1, 'RBD-927 Lâu đài nô lệ Vol.01', 'https://lbfm.lbpictupian.com/upload/vod/2020/05-01/00/wu11uqmybkx0002wu11uqmybkx4531154.jpg', 534, false, null),
+  (7608,  1, 'Chuyến tàu cuối cùng Rail 3', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/05/lydlrvby1uc0512lydlrvby1uc5313890.jpg', 925, false, null),
+  (7607,  1, 'Đường ray xe lửa cuối cùng 2', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/05/onhoutsibxa0513onhoutsibxa0913903.jpg', 730, false, null),
+  (7606,  1, 'Đường ray xe lửa cuối cùng 1', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/05/enztnqng1g30513enztnqng1g32513916.jpg', 672, false, null),
+  (5520,  1, 'SOE-563 Người mới Tập 06', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/yorznzpvlpn1203yorznzpvlpn0329300.jpg', 385, false, null),
+  (5519,  1, 'SOE-563 Người mới Tập 05', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/vtxxoceixx31203vtxxoceixx30429306.jpg', 884, false, null),
+  (5518,  1, 'SOE-563 Tân Binh Tập 04', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/hb1qzn0gk551203hb1qzn0gk550429312.jpg', 410, false, null),
+  (5517,  1, 'SOE-563 Người mới Tập 03', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/fxsjes0imkn1203fxsjes0imkn0529318.jpg', 500, false, null),
+  (5516,  1, 'SOE-563 Người mới Tập 02', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/sie2obugxjn1203sie2obugxjn0629324.jpg', 549, false, null),
+  (5515,  1, 'SOE-563 Người mới Tập 01', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/5ea3pddmvij12035ea3pddmvij0729330.jpg', 235, false, null),
+  (5471,  1, 'SOE-504 Người mới Tập 06', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/1ggr0jirstj12031ggr0jirstj0829336.jpg', 870, false, null),
+  (5470,  1, 'SOE-504 Người mới Tập 05', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/04eyvmkyi0v120304eyvmkyi0v0929342.jpg', 302, false, null),
+  (5469,  1, 'SOE-504 Người mới Tập 04', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/fpjx5xrptbb1203fpjx5xrptbb1029348.jpg', 375, false, null),
+  (5468,  1, 'SOE-504 Người mới Tập 03', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/kfj1r12v10e1203kfj1r12v10e1129354.jpg', 216, false, null),
+  (5467,  1, 'SOE-504 Người mới Tập 02', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/aene1k3zzas1203aene1k3zzas1229360.jpg', 132, false, null),
+  (5466,  1, 'SOE-504 Người mới Tập 01', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/vptb44hnkx41203vptb44hnkx41229366.jpg', 871, false, null),
+  (5334,  1, 'SOE-437 Bộ sưu tập 06', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/xq5chst0jwc1203xq5chst0jwc2429444.jpg', 678, false, null),
+  (5333,  1, 'SOE-437 Bộ sưu tập 05', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/ojzgkxq3eas1201ojzgkxq3eas5828900.jpg', 657, false, null),
+  (5332,  1, 'SOE-437 Bộ sưu tập 04', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/zvseyy2x3cy1201zvseyy2x3cy5928906.jpg', 137, false, null),
+  (5331,  1, 'SOE-437 Bộ sưu tập 03', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/vqbddndzxez1202vqbddndzxez0028912.jpg', 702, false, null),
+  (5330,  1, 'SOE-437 Bộ sưu tập 02', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/boc1hbbm2ai1202boc1hbbm2ai0128918.jpg', 943, false, null),
+  (5329,  1, 'SOE-437 Bộ sưu tập 01', 'https://lbfm.lbpictupian.com/upload/vod/2020/04-30/12/uc2c0kbbooj1202uc2c0kbbooj0228924.jpg', 636, false, null),
+
+  -- Mới nhất (tab 2)
+  (18050, 2, 'Hoàng gia Trung Quốc', 'https://img.img1yutu.com:3451/upload/vod/20230421-1/eae277d409e70101ec55ddb5b3ea91ea.jpg', 3771, false, null),
+  (7654,  2, 'Con gái nhiệt yếu 37℃ B', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/05/2myxnemg5zt05112myxnemg5zt4913833.jpg', 402, false, null),
+  (7653,  2, 'Con gái nóng nảy 37℃ A', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/05/lchjga5y4u30512lchjga5y4u30513848.jpg', 395, false, null),
+  (2133,  2, 'Yoga Đỏ Nóng - D4539049 Tập 02', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/02/ixouh45lk3v0252ixouh45lk3v291322.jpg', 349, false, null),
+  (2132,  2, 'Yoga Đỏ Nóng - D4539049 Tập 01', 'https://lbfm.lbpictupian.com/upload/vod/2019/11-08/02/5iu1z43bsns02525iu1z43bsns451352.jpg', 64, false, null)
+on conflict (external_id) do update set
+  title = excluded.title,
+  cover = excluded.cover,
+  play_count = excluded.play_count,
+  is_popular = excluded.is_popular,
+  popular_rank = excluded.popular_rank;
+
+-- Verify count
+select category_id, count(*) from public.videos group by category_id order by category_id;

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng nhập Kinglove69</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="phone-screen" aria-label="Màn hình đăng nhập">
+      <section class="login-page">
+        <img
+          class="bg-img"
+          src="https://api.cutoraclb.com/base/ico/20240930/95a82d46f3fd7945a779a202516c5c93.gif"
+          alt=""
+        />
+
+        <div class="top-bar">
+          <button class="icon-button back-button" aria-label="Quay lại">
+            <span aria-hidden="true"></span>
+          </button>
+
+          <button class="flag-button" aria-label="Tiếng Việt">
+            <img src="https://cutoraclb.com/img/vn_vn.e75b0cf5.png" alt="" />
+          </button>
+        </div>
+
+        <form class="login-card" action="./profile.html" method="get">
+          <div class="brand" aria-label="Kinglove69">
+            <span class="brand-word">Kinglove</span>
+            <span class="brand-num">69</span>
+          </div>
+
+          <h1>Đăng nhập</h1>
+
+          <label class="field">
+            <span class="sr-only">Tên đăng ký</span>
+            <input type="text" name="username" placeholder="Tên đăng ký" autocomplete="username" />
+          </label>
+
+          <label class="field password-field">
+            <span class="sr-only">Mật khẩu</span>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              placeholder="Vui lòng nhập mật khẩu đăng nhập"
+              autocomplete="current-password"
+            />
+            <button class="eye-button" type="button" aria-label="Hiện mật khẩu" data-toggle-password="password">
+              <span aria-hidden="true"></span>
+            </button>
+          </label>
+
+          <a class="forgot-link" href="./forgot-password.html">Quên mật khẩu?</a>
+
+          <p class="register-text">
+            Không có tài khoản?
+            <a href="./register.html">Đăng ký ngay</a>
+          </p>
+
+          <button class="submit-button" type="submit">Đăng nhập</button>
+        </form>
+      </section>
+    </main>
+
+    <script src="./script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script src="./auth.js"></script>
+  </body>
+</html>

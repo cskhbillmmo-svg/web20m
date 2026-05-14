@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thông tin cơ bản</title>
+    <link rel="stylesheet" href="./profile.css" />
+  </head>
+  <body>
+    <main class="app-screen">
+      <section class="basic-info-page">
+        <header class="page-header">
+          <a class="header-back" href="./profile.html" aria-label="Quay lại"></a>
+          <h1>Thông tin cơ bản</h1>
+        </header>
+
+        <ul class="info-list">
+          <li>
+            <a class="info-row" href="#">
+              <span class="info-label">Tên thật</span>
+              <span class="info-value" data-field="real_name">—</span>
+            </a>
+          </li>
+          <li>
+            <a class="info-row" href="#">
+              <span class="info-label">Giới tính</span>
+              <span class="info-value" data-field="gender">Không xác định</span>
+            </a>
+          </li>
+          <li>
+            <a class="info-row" href="./link-bank.html">
+              <span class="info-label">Liên kết thông tin thẻ ngân hàng</span>
+              <span class="info-value" data-field="bank">không có</span>
+            </a>
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script>
+      (async function () {
+        if (!window.sb) return;
+        const { data: { user } } = await window.sb.auth.getUser();
+        if (!user) return;
+        const [{ data: p }, { data: banks }] = await Promise.all([
+          window.sb.from("profiles").select("real_name,gender,username").eq("id", user.id).maybeSingle(),
+          window.sb.from("bank_accounts").select("bank_name").eq("user_id", user.id).limit(1),
+        ]);
+        const $ = (k) => document.querySelector(`[data-field="${k}"]`);
+        const genderMap = { male: "Nam", female: "Nữ", other: "Khác", unknown: "Không xác định" };
+        if (p) {
+          $("real_name").textContent = p.real_name || p.username || "—";
+          $("gender").textContent = genderMap[p.gender] || "Không xác định";
+        }
+        $("bank").textContent = banks?.length ? banks[0].bank_name : "không có";
+      })();
+    </script>
+  </body>
+</html>
