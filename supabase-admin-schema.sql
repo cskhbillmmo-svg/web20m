@@ -379,6 +379,245 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
+-- 6f. Submit withdraw — atomic deduct balance + insert pending tx
+-- ---------------------------------------------------------------------
+create or replace function public.submit_withdraw_request(p_amount integer)
+returns bigint
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  bal integer;
+  tx_id bigint;
+begin
+  if uid is null then raise exception 'not authenticated'; end if;
+  if p_amount <= 0 then raise exception 'amount must be positive'; end if;
+
+  -- Lock row, check balance, deduct atomically
+  select balance_points into bal from public.profiles where id = uid for update;
+  if bal is null then raise exception 'profile not found'; end if;
+  if bal < p_amount then raise exception 'insufficient balance'; end if;
+
+  update public.profiles
+    set balance_points = balance_points - p_amount
+    where id = uid;
+
+  insert into public.transactions (user_id, type, amount, status)
+  values (uid, 'withdraw', p_amount, 'pending')
+  returning id into tx_id;
+
+  return tx_id;
+end $$;
+
+-- ---------------------------------------------------------------------
+-- 6g. Override approve_transaction để khớp model trừ-ngay
+--     - deposit: approve → cộng balance ; reject → no-op
+--     - withdraw: balance đã trừ lúc submit
+--                 approve → mark success (giữ trừ)
+--                 reject  → REFUND balance, mark cancelled
+-- ---------------------------------------------------------------------
+create or replace function public.approve_transaction(p_tx_id bigint, p_approve boolean)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  tx public.transactions;
+begin
+  if not public.is_admin(auth.uid()) then raise exception 'forbidden'; end if;
+
+  select * into tx from public.transactions where id = p_tx_id for update;
+  if tx is null then raise exception 'transaction not found'; end if;
+  if tx.status <> 'pending' then raise exception 'transaction already processed'; end if;
+
+  if not p_approve then
+    -- Reject
+    if tx.type = 'withdraw' then
+      -- Refund vì user đã bị trừ lúc submit
+      update public.profiles
+        set balance_points = balance_points + tx.amount
+        where id = tx.user_id;
+    end if;
+    update public.transactions set status = 'cancelled' where id = p_tx_id;
+    return jsonb_build_object('id', p_tx_id, 'type', tx.type, 'amount', tx.amount, 'status', 'cancelled');
+  end if;
+
+  -- Approve
+  if tx.type = 'deposit' then
+    update public.profiles
+      set balance_points = balance_points + tx.amount
+      where id = tx.user_id;
+  end if;
+  -- withdraw approve: không cần trừ thêm (đã trừ lúc submit)
+
+  update public.transactions set status = 'success' where id = p_tx_id;
+  return jsonb_build_object('id', p_tx_id, 'type', tx.type, 'amount', tx.amount, 'status', 'success');
+end $$;
+
+-- ---------------------------------------------------------------------
+-- 6h. Quick place bet — auto-create round nếu chưa có, atomic deduct
+-- ---------------------------------------------------------------------
+create or replace function public.quick_place_bet(
+  p_vote_type integer,
+  p_choice text,
+  p_amount integer
+)
+returns bigint
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  r public.vote_rounds;
+  bal integer;
+  bet_id bigint;
+begin
+  if uid is null then raise exception 'not authenticated'; end if;
+  if p_amount <= 0 then raise exception 'amount must be positive'; end if;
+  if p_vote_type not in (1, 2, 3) then raise exception 'invalid vote_type'; end if;
+
+  -- Get latest open round for this vote_type, or create one
+  select * into r from public.vote_rounds
+    where vote_type = p_vote_type and status = 'open'
+    order by open_at desc limit 1;
+
+  if r.id is null then
+    insert into public.vote_rounds (vote_type, round_no, status, multiplier)
+    values (
+      p_vote_type,
+      to_char(now() at time zone 'Asia/Ho_Chi_Minh', 'YYYYMMDDHH24MISS')
+        || '-' || lpad(floor(random() * 10000)::text, 4, '0'),
+      'open',
+      2.0
+    )
+    returning * into r;
+  end if;
+
+  -- Check balance & deduct atomically
+  select balance_points into bal from public.profiles where id = uid for update;
+  if bal is null then raise exception 'profile not found'; end if;
+  if bal < p_amount then raise exception 'insufficient balance'; end if;
+
+  update public.profiles set balance_points = balance_points - p_amount where id = uid;
+
+  insert into public.vote_history (user_id, round_id, vote_type, choice, amount, status, is_secret)
+  values (uid, r.id, r.vote_type, p_choice, p_amount, 'pending', true)
+  returning id into bet_id;
+
+  return bet_id;
+end $$;
+
+-- ---------------------------------------------------------------------
+-- 6i. Freeze account — admin có thể đóng băng user
+-- ---------------------------------------------------------------------
+alter table public.profiles
+  add column if not exists is_frozen boolean not null default false;
+
+-- Override place_bet để check frozen
+create or replace function public.place_bet(p_round_id bigint, p_choice text, p_amount integer)
+returns bigint
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  r public.vote_rounds;
+  bal integer;
+  frozen boolean;
+  bet_id bigint;
+begin
+  if uid is null then raise exception 'not authenticated'; end if;
+  if p_amount <= 0 then raise exception 'amount must be positive'; end if;
+
+  select * into r from public.vote_rounds where id = p_round_id;
+  if r is null then raise exception 'round not found'; end if;
+  if r.status <> 'open' then raise exception 'round closed'; end if;
+
+  select balance_points, is_frozen into bal, frozen from public.profiles where id = uid for update;
+  if frozen then raise exception 'account frozen — liên hệ CSKH'; end if;
+  if bal < p_amount then raise exception 'insufficient balance'; end if;
+
+  update public.profiles set balance_points = balance_points - p_amount where id = uid;
+  insert into public.vote_history (user_id, round_id, vote_type, choice, amount, status, is_secret)
+  values (uid, p_round_id, r.vote_type, p_choice, p_amount, 'pending', true)
+  returning id into bet_id;
+  return bet_id;
+end $$;
+
+-- Override quick_place_bet để check frozen
+create or replace function public.quick_place_bet(
+  p_vote_type integer, p_choice text, p_amount integer
+) returns bigint
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  r public.vote_rounds;
+  bal integer;
+  frozen boolean;
+  bet_id bigint;
+begin
+  if uid is null then raise exception 'not authenticated'; end if;
+  if p_amount <= 0 then raise exception 'amount must be positive'; end if;
+  if p_vote_type not in (1, 2, 3) then raise exception 'invalid vote_type'; end if;
+
+  select balance_points, is_frozen into bal, frozen from public.profiles where id = uid for update;
+  if frozen then raise exception 'account frozen — liên hệ CSKH'; end if;
+  if bal < p_amount then raise exception 'insufficient balance'; end if;
+
+  select * into r from public.vote_rounds
+    where vote_type = p_vote_type and status = 'open'
+    order by open_at desc limit 1;
+
+  if r.id is null then
+    insert into public.vote_rounds (vote_type, round_no, status, multiplier)
+    values (p_vote_type,
+      to_char(now() at time zone 'Asia/Ho_Chi_Minh', 'YYYYMMDDHH24MISS')
+        || '-' || lpad(floor(random() * 10000)::text, 4, '0'),
+      'open', 2.0)
+    returning * into r;
+  end if;
+
+  update public.profiles set balance_points = balance_points - p_amount where id = uid;
+  insert into public.vote_history (user_id, round_id, vote_type, choice, amount, status, is_secret)
+  values (uid, r.id, r.vote_type, p_choice, p_amount, 'pending', true)
+  returning id into bet_id;
+  return bet_id;
+end $$;
+
+-- Override submit_withdraw_request để check frozen
+create or replace function public.submit_withdraw_request(p_amount integer)
+returns bigint
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  bal integer;
+  frozen boolean;
+  tx_id bigint;
+begin
+  if uid is null then raise exception 'not authenticated'; end if;
+  if p_amount <= 0 then raise exception 'amount must be positive'; end if;
+  select balance_points, is_frozen into bal, frozen from public.profiles where id = uid for update;
+  if frozen then raise exception 'account frozen — liên hệ CSKH'; end if;
+  if bal is null then raise exception 'profile not found'; end if;
+  if bal < p_amount then raise exception 'insufficient balance'; end if;
+  update public.profiles set balance_points = balance_points - p_amount where id = uid;
+  insert into public.transactions (user_id, type, amount, status)
+  values (uid, 'withdraw', p_amount, 'pending') returning id into tx_id;
+  return tx_id;
+end $$;
+
+-- ---------------------------------------------------------------------
 -- 7. Admin view: bet summary per round
 -- ---------------------------------------------------------------------
 create or replace view public.vote_round_stats as

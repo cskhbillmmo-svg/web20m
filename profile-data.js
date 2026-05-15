@@ -29,9 +29,10 @@ window.fetchProfile = async function () {
   const sub = document.querySelector(".profile-ident p");
   const balanceEl = document.querySelector("[data-balance]");
 
-  // Display balance in K (1K = 1000 VND/points)
+  // Display balance in K (1K = 1000 VND/points) + thousand separator
+  const currency = new Intl.NumberFormat("vi-VN");
   function toK(points) {
-    return String(Math.floor((Number(points) || 0) / 1000));
+    return currency.format(Math.floor((Number(points) || 0) / 1000));
   }
 
   function applyProfile(p) {
@@ -53,7 +54,7 @@ window.fetchProfile = async function () {
         if (balanceEl) {
           const oldK = Number(balanceEl.textContent.replace(/\D/g, "")) || 0;
           const nextK = Math.floor((Number(payload.new.balance_points) || 0) / 1000);
-          balanceEl.textContent = String(nextK);
+          balanceEl.textContent = currency.format(nextK);
           if (nextK !== oldK) {
             balanceEl.classList.add("balance-flash");
             setTimeout(() => balanceEl.classList.remove("balance-flash"), 800);

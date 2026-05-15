@@ -1498,6 +1498,98 @@ button.nav-logo {
 
 .settings-logout:hover { filter: brightness(1.08); }
 
+/* ===== User confirm/prompt modal (light theme) ===== */
+.uc-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.uc-overlay.is-visible { opacity: 1; }
+
+.uc-box {
+  width: 100%;
+  max-width: 320px;
+  padding: 22px 22px 18px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
+  transform: scale(0.96);
+  transition: transform 0.18s ease;
+}
+.uc-overlay.is-visible .uc-box { transform: scale(1); }
+
+.uc-title {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #111722;
+  text-align: center;
+}
+
+.uc-msg {
+  margin: 0 0 18px;
+  color: #2d3340;
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+  white-space: pre-line;
+}
+
+.uc-input {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  border: 1px solid #d6dae0;
+  border-radius: 8px;
+  background: #f8f9fb;
+  font-family: inherit;
+  font-size: 14px;
+  color: #111722;
+  resize: vertical;
+  outline: none;
+}
+.uc-input:focus { border-color: #18552e; background: #fff; }
+
+.uc-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.uc-btn {
+  flex: 1;
+  height: 42px;
+  border: 1px solid #d6dae0;
+  border-radius: 999px;
+  background: #fff;
+  color: #2d3340;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.uc-btn.uc-ok {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.uc-btn.uc-ok.uc-danger {
+  background: #e23a48;
+  border-color: #e23a48;
+}
+
+.uc-btn:hover { filter: brightness(1.06); }
+.uc-btn:active { transform: scale(0.98); }
+
 /* ===== Change password form (settings → mật khẩu đăng nhập) ===== */
 .pw-form {
   margin: 16px;

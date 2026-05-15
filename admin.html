@@ -13,9 +13,13 @@
         <span>Admin</span>
       </div>
       <nav class="admin-tabs" role="tablist">
-        <button class="tab is-active" data-tab="votes" type="button">VOTE</button>
+        <button class="tab is-active" data-tab="votes" type="button">
+          VOTE<span class="tab-badge" data-badge="votes" hidden>0</span>
+        </button>
         <button class="tab" data-tab="users" type="button">Users</button>
-        <button class="tab" data-tab="transactions" type="button">Giao dịch</button>
+        <button class="tab" data-tab="transactions" type="button">
+          Giao dịch<span class="tab-badge" data-badge="transactions" hidden>0</span>
+        </button>
         <button class="tab" data-tab="notifications" type="button">Thông báo</button>
         <button class="tab" data-tab="dashboard" type="button">Dashboard</button>
       </nav>
@@ -313,6 +317,71 @@
     </dialog>
 
     <div class="admin-toast" data-toast hidden></div>
+
+    <!-- User withdraw history modal -->
+    <dialog class="modal user-history-modal" data-modal="withdraw-history">
+      <div class="user-history-head">
+        <h3 data-wh-user>Lịch sử rút tiền</h3>
+        <button type="button" class="btn-link" data-action="close-modal">Đóng</button>
+      </div>
+      <div class="user-history-stats" data-wh-stats>—</div>
+      <div class="bets-table-wrap">
+        <table class="bets-table">
+          <thead>
+            <tr>
+              <th class="num">Số tiền</th>
+              <th>Status</th>
+              <th>Ghi chú</th>
+              <th>Tạo lúc</th>
+              <th>Xử lý lúc</th>
+            </tr>
+          </thead>
+          <tbody data-wh-body>
+            <tr><td colspan="5" class="muted">Đang tải…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </dialog>
+
+    <!-- User VOTE history modal -->
+    <dialog class="modal user-history-modal" data-modal="user-history">
+      <div class="user-history-head">
+        <h3 data-history-user>Lịch sử VOTE</h3>
+        <button type="button" class="btn-link" data-action="close-modal">Đóng</button>
+      </div>
+      <div class="user-history-stats" data-history-stats>—</div>
+      <div class="bets-table-wrap">
+        <table class="bets-table">
+          <thead>
+            <tr>
+              <th>Round</th>
+              <th>VOTE</th>
+              <th>Choice</th>
+              <th class="num">Amount</th>
+              <th>Status</th>
+              <th class="num">Payout</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody data-history-body>
+            <tr><td colspan="7" class="muted">Đang tải…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </dialog>
+
+    <!-- Custom confirm / prompt modal -->
+    <dialog class="modal admin-confirm" data-confirm-modal>
+      <div class="confirm-body">
+        <h3 data-confirm-title>Xác nhận</h3>
+        <p data-confirm-message></p>
+        <textarea data-confirm-input rows="2" hidden></textarea>
+        <div class="confirm-actions">
+          <button type="button" data-confirm-cancel>Hủy</button>
+          <button type="button" class="btn-primary" data-confirm-ok>Xác nhận</button>
+        </div>
+      </div>
+    </dialog>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js"></script>

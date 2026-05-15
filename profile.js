@@ -73,10 +73,11 @@ document.addEventListener("keydown", (e) => {
 
 const balanceEl = document.querySelector("[data-balance]");
 let currentBalance = Number(balanceEl?.textContent || 0);
-// Hiển thị balance theo K (1K = 1000 points/VND)
+// Hiển thị balance theo K (1K = 1000 points/VND) + thousand separator
 function setBalance(pointsValue) {
   currentBalance = pointsValue;
-  if (balanceEl) balanceEl.textContent = String(Math.floor((Number(pointsValue) || 0) / 1000));
+  const k = Math.floor((Number(pointsValue) || 0) / 1000);
+  if (balanceEl) balanceEl.textContent = currency.format(k);
 }
 
 const actions = {
@@ -106,7 +107,10 @@ const actions = {
 
   logout: async () => {
     closeSettings();
-    if (!confirm("Bạn có chắc muốn đăng xuất?")) return;
+    const ok = window.userConfirm
+      ? await window.userConfirm("Bạn có chắc muốn đăng xuất?", { title: "Đăng xuất", okText: "Đăng xuất", danger: true })
+      : confirm("Bạn có chắc muốn đăng xuất?");
+    if (!ok) return;
     await window.sb?.auth.signOut();
     window.location.href = "./index.html";
   },

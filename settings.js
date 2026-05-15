@@ -25,7 +25,10 @@ document.addEventListener("click", async (e) => {
   const a = t.dataset.action;
 
   if (a === "logout") {
-    if (!confirm("Bạn có chắc muốn đăng xuất?")) return;
+    const ok = window.userConfirm
+      ? await window.userConfirm("Bạn có chắc muốn đăng xuất?", { title: "Đăng xuất", okText: "Đăng xuất", danger: true })
+      : confirm("Bạn có chắc muốn đăng xuất?");
+    if (!ok) return;
     if (sb) await sb.auth.signOut();
     window.location.href = "./index.html";
     return;

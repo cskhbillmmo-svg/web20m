@@ -32,9 +32,10 @@ function updateTotals() {
   betPanel.hidden = count === 0;
 }
 
+const fmtBalance = new Intl.NumberFormat("vi-VN");
 function setBalance(n) {
   userBalance = n;
-  if (balanceEl) balanceEl.firstChild.textContent = String(Math.floor(n / 1000));
+  if (balanceEl) balanceEl.firstChild.textContent = fmtBalance.format(Math.floor(n / 1000));
 }
 
 // ===== Init =====
@@ -56,22 +57,13 @@ function setBalance(n) {
     .select("*").eq("vote_type", voteType).eq("status", "open")
     .order("open_at", { ascending: false }).limit(1).maybeSingle();
 
-  const infoEl = document.querySelector("[data-round-info]");
   if (!round) {
     showToast("Hiện chưa có round nào đang mở cho VOTE" + voteType);
-    optionButtons.forEach((b) => (b.disabled = true));
-    confirmButton.disabled = true;
+    // Không disable — vẫn cho user toggle option, chỉ chặn submit
     return;
   }
   openRound = round;
   if (titleEl) titleEl.textContent = `VOTE${voteType} · ${round.round_no}`;
-
-  if (infoEl) {
-    infoEl.hidden = false;
-    document.querySelector("[data-round-no]").textContent = round.round_no;
-    document.querySelector("[data-round-mult]").textContent = `×${round.multiplier}`;
-    document.querySelector("[data-round-status]").textContent = round.status.toUpperCase();
-  }
 
   // Update odds display from round multiplier
   optionButtons.forEach((b) => {
@@ -109,22 +101,16 @@ amountInput.addEventListener("input", () => {
 });
 
 confirmButton.addEventListener("click", async () => {
-  if (!openRound) { showToast("Không có round đang mở"); return; }
-
   // Validation order chuẩn cutoraclb (reservation.*)
   const moneyStr = amountInput.value.trim();
-  // 1. money === "0" → "Số tiền sai"
   if (moneyStr === "0") { showToast("Số tiền sai"); return; }
-  // 2. formData.length === 0 → "Vui lòng chọn"
   if (!selected.length) { showToast("Vui lòng chọn"); return; }
-  // 3. money === "" → "Vui lòng nhập số tiền"
   if (moneyStr === "") { showToast("Vui lòng nhập số tiền"); return; }
 
   const amountK = Number(moneyStr);
   const amountPoints = amountK * 1000;
   const totalNeeded = amountPoints * selected.length;
 
-  // 4. balance < total → "Số dư không đủ, vui lòng liên hệ CSKH để nạp thêm!"
   if (totalNeeded > userBalance) {
     showToast("Số dư không đủ, vui lòng liên hệ CSKH để nạp thêm!");
     return;
@@ -134,8 +120,9 @@ confirmButton.addEventListener("click", async () => {
   let placedCount = 0;
   let lastError = null;
   for (const choice of selected) {
-    const { error } = await sb.rpc("place_bet", {
-      p_round_id: openRound.id,
+    // quick_place_bet tự tạo round nếu chưa có + atomic trừ balance
+    const { error } = await sb.rpc("quick_place_bet", {
+      p_vote_type: voteType,
       p_choice: choice,
       p_amount: amountPoints,
     });

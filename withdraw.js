@@ -70,15 +70,17 @@ submitBtn.addEventListener("click", async () => {
     return;
   }
 
-  if (!confirm(`Xác nhận rút ${fmt.format(k)}K?`)) return;
+  const ok = window.userConfirm
+    ? await window.userConfirm(`Xác nhận rút ${fmt.format(k)}K?`, { title: "Rút tiền", okText: "Xác nhận" })
+    : confirm(`Xác nhận rút ${fmt.format(k)}K?`);
+  if (!ok) return;
 
   submitBtn.disabled = true;
   submitBtn.textContent = "Đang xử lý…";
 
   const points = k * 1000;
-  const { error } = await sb.from("transactions").insert({
-    user_id: user.id, type: "withdraw", amount: points, status: "pending",
-  });
+  // Atomic: trừ balance + insert pending tx (giống cutoraclb)
+  const { error } = await sb.rpc("submit_withdraw_request", { p_amount: points });
 
   if (error) {
     submitBtn.disabled = false;

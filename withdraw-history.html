@@ -30,8 +30,9 @@
         const { data: { user } } = await window.sb.auth.getUser();
         if (!user) { window.location.href = "./index.html"; return; }
 
+        // Select * để tránh fail nếu thiếu cột updated_at; tự fallback
         const { data, error } = await window.sb.from("transactions")
-          .select("id, amount, status, note, created_at, updated_at")
+          .select("*")
           .eq("user_id", user.id)
           .eq("type", "withdraw")
           .order("created_at", { ascending: false });

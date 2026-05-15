@@ -26,6 +26,47 @@ function fmtTime(iso) {
   return new Date(iso).toLocaleString("sv-SE").replace("T", " ");
 }
 
+// ===== Custom confirm / prompt (replaces ugly native dialogs) =====
+function adminConfirm(message, options = {}) {
+  return new Promise((resolve) => {
+    const dlg = document.querySelector("[data-confirm-modal]");
+    if (!dlg) return resolve(window.confirm(message));
+
+    dlg.querySelector("[data-confirm-title]").textContent = options.title || "Xác nhận";
+    dlg.querySelector("[data-confirm-message]").textContent = message;
+    const input = dlg.querySelector("[data-confirm-input]");
+    const showInput = !!options.input;
+    input.hidden = !showInput;
+    if (showInput) {
+      input.value = options.defaultValue || "";
+      input.placeholder = options.placeholder || "";
+    }
+    const okBtn = dlg.querySelector("[data-confirm-ok]");
+    const cancelBtn = dlg.querySelector("[data-confirm-cancel]");
+    okBtn.textContent = options.okText || "Xác nhận";
+    cancelBtn.textContent = options.cancelText || "Hủy";
+    okBtn.className = "btn-primary" + (options.danger ? " btn-danger" : "");
+
+    const cleanup = (result) => {
+      okBtn.onclick = null;
+      cancelBtn.onclick = null;
+      dlg.onclose = null;
+      dlg.close();
+      resolve(result);
+    };
+    okBtn.onclick = () => cleanup(showInput ? (input.value.trim() || true) : true);
+    cancelBtn.onclick = () => cleanup(false);
+    dlg.onclose = () => cleanup(false);
+
+    dlg.showModal();
+    if (showInput) setTimeout(() => input.focus(), 30);
+  });
+}
+
+function adminPrompt(message, defaultValue = "", options = {}) {
+  return adminConfirm(message, { ...options, input: true, defaultValue });
+}
+
 // ===== Auth gate =====
 (async function gate() {
   if (!sb) {
@@ -130,6 +171,8 @@ function init() {
       if (tab.dataset.tab === "dashboard") loadDashboard();
       if (tab.dataset.tab === "notifications") loadNotifications();
       if (tab.dataset.tab === "transactions") loadTransactions();
+      // Clear badge of clicked tab
+      setBadge(tab.dataset.tab, 0);
     });
   });
 
@@ -176,6 +219,9 @@ function init() {
     else if (a === "send-notification") sendNotification();
     else if (a === "approve-tx") doApproveTx(Number(t.dataset.txId), true);
     else if (a === "reject-tx") doApproveTx(Number(t.dataset.txId), false);
+    else if (a === "user-history") openUserHistory(t.dataset.userId, t.dataset.username);
+    else if (a === "user-withdraws") openUserWithdraws(t.dataset.userId, t.dataset.username);
+    else if (a === "toggle-freeze") toggleFreeze(t.dataset.userId, t.dataset.username, t.dataset.frozen === "1");
     else if (a === "edit-bank") openBankEdit(t.dataset.userId, t.dataset.username);
     else if (a === "submit-edit-bank") submitBankEdit();
     else if (a === "delete-bank") deleteBankForUser();
@@ -195,6 +241,7 @@ function init() {
 
   loadRounds();
   loadAllRounds();
+  refreshBadges();
 
   // Realtime — admin nhận yêu cầu giao dịch mới
   sb.channel("admin-tx")
@@ -202,6 +249,7 @@ function init() {
       { event: "INSERT", schema: "public", table: "transactions" },
       (payload) => {
         toast(`Có yêu cầu ${payload.new.type === "deposit" ? "nạp" : "rút"} mới · ${fmtNum(payload.new.amount)}đ`, "success");
+        bumpBadge("transactions");
         const activePanel = document.querySelector(".tab.is-active")?.dataset.tab;
         if (activePanel === "transactions") loadTransactions();
       }
@@ -213,6 +261,8 @@ function init() {
     .on("postgres_changes",
       { event: "INSERT", schema: "public", table: "vote_history" },
       (payload) => {
+        bumpBadge("votes");
+        toast(`User vừa cược: ${esc(payload.new.choice)} · ${fmtNum(payload.new.amount)}đ`, "success");
         if (currentRoundId && Number(payload.new.round_id) === currentRoundId) {
           selectRound(currentRoundId);
         }
@@ -224,7 +274,7 @@ function init() {
 
 // ===== Force-close round =====
 async function doCloseRound(roundId) {
-  if (!confirm("Đóng round này? Sẽ không cho cược mới, nhưng chưa settle.")) return;
+  if (!(await adminConfirm("Đóng round này? Sẽ không cho cược mới, nhưng chưa settle.", { title: "Đóng round" }))) return;
   const { error } = await sb.from("vote_rounds").update({ status: "closed", close_at: new Date().toISOString() }).eq("id", roundId);
   if (error) { toast(error.message, "error"); return; }
   toast("Đã đóng round", "success");
@@ -233,7 +283,7 @@ async function doCloseRound(roundId) {
 
 // ===== Delete unsettled round =====
 async function doDeleteRound(roundId) {
-  if (!confirm("Xóa round này? Tất cả bets sẽ bị xóa và hoàn tiền cho user.")) return;
+  if (!(await adminConfirm("Xóa round này? Tất cả bets sẽ bị xóa và hoàn tiền cho user.", { title: "Xóa round", danger: true, okText: "Xóa" }))) return;
   const { data, error } = await sb.rpc("delete_round_with_refund", { p_round_id: roundId });
   if (error) { toast(error.message, "error"); return; }
   toast(`Đã xóa round + hoàn ${data.bets_deleted} bets · ${fmtNum(data.total_refunded)}đ`, "success");
@@ -319,14 +369,21 @@ async function doApproveTx(txId, approve) {
 
   // Hỏi note (đặc biệt cần khi từ chối để user biết lý do)
   const promptMsg = approve
-    ? `DUYỆT giao dịch này?\nGhi chú (tùy chọn, hiện cho user thấy):`
-    : `TỪ CHỐI giao dịch này?\nLý do (sẽ hiện cho user):`;
-  const note = window.prompt(promptMsg, approve ? "" : "Lỗi liên kết tài khoản ngân hàng (Thông tin người nhận không trùng khớp)");
-  if (note === null) return; // user bấm cancel
+    ? "Ghi chú (tùy chọn, hiện cho user thấy):"
+    : "Lý do từ chối (sẽ hiện cho user):";
+  const defaultVal = approve ? "" : "Lỗi liên kết tài khoản ngân hàng (Thông tin người nhận không trùng khớp)";
+  const note = await adminPrompt(promptMsg, defaultVal, {
+    title: approve ? "Duyệt giao dịch" : "Từ chối giao dịch",
+    danger: !approve,
+    okText: approve ? "Duyệt" : "Từ chối",
+    placeholder: "Ghi chú hiển thị cho user",
+  });
+  if (note === false) return; // user bấm Hủy
 
   // Update note trước (vì RPC chỉ approve/reject, không nhận note)
-  if (note.trim()) {
-    await sb.from("transactions").update({ note: note.trim() }).eq("id", txId);
+  const noteText = typeof note === "string" ? note.trim() : "";
+  if (noteText) {
+    await sb.from("transactions").update({ note: noteText }).eq("id", txId);
   }
 
   const { data, error } = await sb.rpc("approve_transaction", { p_tx_id: txId, p_approve: approve });
@@ -542,7 +599,7 @@ async function doSettleRound(quickChoice) {
   if (!currentRoundId) { toast("Chưa chọn round", "error"); return; }
   const winning = quickChoice || document.querySelector("[data-settle-winning]").value.trim();
   if (!winning) { toast("Nhập kết quả hoặc click vào choice", "error"); return; }
-  if (!confirm(`Settle round với kết quả "${winning}"? Hành động này không hoàn tác.`)) return;
+  if (!(await adminConfirm(`Settle round với kết quả "${winning}"? Hành động này không hoàn tác.`, { title: "Settle round", danger: true, okText: "Settle" }))) return;
   const { data, error } = await sb.rpc("settle_round", { p_round_id: currentRoundId, p_winning: winning });
   if (error) { toast(error.message, "error"); return; }
   toast(`Settle xong. Winners: ${data.winners}, payout: ${fmtNum(data.total_payout)}`, "success");
@@ -553,7 +610,7 @@ async function doSettleRound(quickChoice) {
 async function loadUsers(search = "") {
   const tbody = document.querySelector("[data-users-body]");
   let q = sb.from("profiles")
-    .select("id, username, role, balance_points, vote_points, created_at")
+    .select("id, username, role, balance_points, vote_points, created_at, is_frozen")
     .order("created_at", { ascending: false })
     .limit(100);
   if (search) q = q.ilike("username", `%${search}%`);
@@ -574,9 +631,13 @@ async function loadUsers(search = "") {
     const bankCell = b
       ? `<small>${esc(b.bank_name)} · ${esc(b.account_number)}</small>`
       : `<small class="muted">chưa liên kết</small>`;
+    const frozen = !!u.is_frozen;
     return `
-    <tr>
-      <td><strong>${esc(u.username)}</strong></td>
+    <tr${frozen ? ' class="user-frozen"' : ''}>
+      <td>
+        <strong>${esc(u.username)}</strong>
+        ${frozen ? ' <span class="frozen-badge" title="Tài khoản bị đóng băng">❄ FROZEN</span>' : ''}
+      </td>
       <td><span class="badge badge--${u.role === "admin" ? "win" : "settled"}">${u.role}</span></td>
       <td class="num">${fmtNum(u.balance_points)}</td>
       <td class="num">${fmtNum(u.vote_points)}</td>
@@ -585,7 +646,10 @@ async function loadUsers(search = "") {
         ${bankCell}<br>
         <button class="btn-link" data-action="adjust-balance" data-user-id="${u.id}" data-username="${esc(u.username)}" data-balance="${u.balance_points}" data-mode="add">+ Cộng</button>
         <button class="btn-link" data-action="adjust-balance" data-user-id="${u.id}" data-username="${esc(u.username)}" data-balance="${u.balance_points}" data-mode="sub">− Trừ</button>
+        <button class="btn-link" data-action="user-history" data-user-id="${u.id}" data-username="${esc(u.username)}">LS Vote</button>
+        <button class="btn-link" data-action="user-withdraws" data-user-id="${u.id}" data-username="${esc(u.username)}">LS Rút</button>
         <button class="btn-link" data-action="edit-bank" data-user-id="${u.id}" data-username="${esc(u.username)}">${b ? "Sửa bank" : "Thêm bank"}</button>
+        <button class="btn-link${frozen ? ' danger' : ''}" data-action="toggle-freeze" data-user-id="${u.id}" data-username="${esc(u.username)}" data-frozen="${frozen ? '1' : '0'}">${frozen ? 'Mở khóa' : 'Đóng băng'}</button>
         <button class="btn-link" data-action="toggle-role" data-user-id="${u.id}" data-role="${u.role}">${u.role === "admin" ? "Bỏ admin" : "Set admin"}</button>
       </td>
     </tr>
@@ -628,7 +692,7 @@ async function submitAdjustBalance() {
   }
   const delta = adjustState.mode === "add" ? amount : -amount;
   const word = adjustState.mode === "add" ? "cộng" : "trừ";
-  if (!confirm(`${word.toUpperCase()} ${fmtNum(amount)} điểm cho user?`)) return;
+  if (!(await adminConfirm(`${word.toUpperCase()} ${fmtNum(amount)} điểm cho user?`, { title: "Điều chỉnh điểm", okText: word === "cộng" ? "Cộng" : "Trừ" }))) return;
 
   const { data, error } = await sb.rpc("adjust_balance", {
     p_user_id: adjustState.userId,
@@ -639,6 +703,158 @@ async function submitAdjustBalance() {
   toast(`Đã ${word} ${fmtNum(amount)} điểm · số dư mới: ${fmtNum(data.new_balance)}`, "success");
   modal.close();
   loadUsers(document.querySelector("[data-user-search]").value.trim());
+}
+
+// ===== User VOTE history (admin xem lịch sử cược của 1 user) =====
+async function openUserHistory(userId, username) {
+  const modal = document.querySelector('[data-modal="user-history"]');
+  modal.querySelector("[data-history-user]").textContent = `Lịch sử VOTE — ${username}`;
+  const tbody = modal.querySelector("[data-history-body]");
+  const stats = modal.querySelector("[data-history-stats]");
+  tbody.innerHTML = '<tr><td colspan="7" class="muted">Đang tải…</td></tr>';
+  stats.textContent = "—";
+  modal.showModal();
+
+  const { data, error } = await sb
+    .from("vote_history")
+    .select("id, vote_type, choice, amount, status, payout, created_at, vote_rounds(round_no)")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="7" class="muted">${esc(error.message)}</td></tr>`;
+    return;
+  }
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">User chưa cược lần nào</td></tr>';
+    stats.textContent = "0 cược";
+    return;
+  }
+
+  const totalBet = data.reduce((s, b) => s + (b.amount || 0), 0);
+  const totalPayout = data.reduce((s, b) => s + (b.payout || 0), 0);
+  const winCount = data.filter((b) => b.status === "win").length;
+  const loseCount = data.filter((b) => b.status === "lose").length;
+  const pendingCount = data.filter((b) => b.status === "pending").length;
+
+  stats.innerHTML = `
+    <span><strong>${data.length}</strong> cược</span>
+    <span>Tổng cược: <strong>${fmtNum(totalBet)}</strong></span>
+    <span>Tổng nhận: <strong>${fmtNum(totalPayout)}</strong></span>
+    <span class="${totalPayout - totalBet >= 0 ? 'win' : 'lose'}">Net: <strong>${(totalPayout - totalBet >= 0 ? '+' : '') + fmtNum(totalPayout - totalBet)}</strong></span>
+    <span>Win/Lose/Pending: <strong>${winCount}/${loseCount}/${pendingCount}</strong></span>
+  `;
+
+  tbody.innerHTML = data.map((b) => `
+    <tr>
+      <td>${esc(b.vote_rounds?.round_no || "—")}</td>
+      <td>VOTE ${b.vote_type}</td>
+      <td><strong>${esc(b.choice || "—")}</strong></td>
+      <td class="num">${fmtNum(b.amount)}</td>
+      <td><span class="badge badge--${b.status}">${b.status}</span></td>
+      <td class="num">${fmtNum(b.payout)}</td>
+      <td>${fmtTime(b.created_at)}</td>
+    </tr>
+  `).join("");
+}
+
+// ===== User withdraw history (admin xem) =====
+async function openUserWithdraws(userId, username) {
+  const modal = document.querySelector('[data-modal="withdraw-history"]');
+  modal.querySelector("[data-wh-user]").textContent = `Lịch sử rút tiền — ${username}`;
+  const tbody = modal.querySelector("[data-wh-body]");
+  const stats = modal.querySelector("[data-wh-stats]");
+  tbody.innerHTML = '<tr><td colspan="5" class="muted">Đang tải…</td></tr>';
+  stats.textContent = "—";
+  modal.showModal();
+
+  const { data, error } = await sb.from("transactions")
+    .select("id, amount, status, note, created_at, updated_at")
+    .eq("user_id", userId).eq("type", "withdraw")
+    .order("created_at", { ascending: false }).limit(200);
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="5" class="muted">${esc(error.message)}</td></tr>`;
+    return;
+  }
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="muted">User chưa rút lần nào</td></tr>';
+    stats.textContent = "0 giao dịch";
+    return;
+  }
+
+  const total = data.reduce((s, t) => s + (t.amount || 0), 0);
+  const successCount = data.filter((t) => t.status === "success").length;
+  const pendingCount = data.filter((t) => t.status === "pending").length;
+  const cancelledCount = data.filter((t) => t.status === "cancelled").length;
+
+  stats.innerHTML = `
+    <span><strong>${data.length}</strong> giao dịch</span>
+    <span>Tổng rút: <strong>${fmtNum(total)}</strong></span>
+    <span>OK/Chờ/Hủy: <strong>${successCount}/${pendingCount}/${cancelledCount}</strong></span>
+  `;
+
+  tbody.innerHTML = data.map((t) => `
+    <tr>
+      <td class="num">−${fmtNum(t.amount)}</td>
+      <td><span class="badge badge--${t.status}">${t.status}</span></td>
+      <td>${esc(t.note || "—")}</td>
+      <td>${fmtTime(t.created_at)}</td>
+      <td>${fmtTime(t.updated_at || t.created_at)}</td>
+    </tr>
+  `).join("");
+}
+
+// ===== Freeze / unfreeze account =====
+async function toggleFreeze(userId, username, isFrozen) {
+  const action = isFrozen ? "Mở khóa" : "Đóng băng";
+  const ok = await adminConfirm(
+    `${action.toUpperCase()} tài khoản "${username}"?\n${
+      isFrozen
+        ? "Sau khi mở khóa, user có thể cược/rút bình thường."
+        : "Sau khi đóng băng, user KHÔNG thể cược, rút tiền. Số dư vẫn giữ nguyên."
+    }`,
+    { title: action, danger: !isFrozen, okText: action }
+  );
+  if (!ok) return;
+
+  const { error } = await sb.from("profiles")
+    .update({ is_frozen: !isFrozen }).eq("id", userId);
+  if (error) { toast(error.message, "error"); return; }
+  toast(`${action} thành công user "${username}"`, "success");
+  loadUsers(document.querySelector("[data-user-search]")?.value.trim() || "");
+}
+
+// ===== Tab badge counter =====
+const badgeState = { votes: 0, transactions: 0 };
+function setBadge(name, value) {
+  badgeState[name] = value;
+  const el = document.querySelector(`[data-badge="${name}"]`);
+  if (!el) return;
+  if (value > 0) {
+    el.textContent = String(value);
+    el.hidden = false;
+  } else {
+    el.hidden = true;
+  }
+}
+function bumpBadge(name) {
+  // Chỉ bump nếu tab đó không phải active
+  const activeTab = document.querySelector(".tab.is-active")?.dataset.tab;
+  if (activeTab === name) return;
+  setBadge(name, (badgeState[name] || 0) + 1);
+}
+
+async function refreshBadges() {
+  // Pending transactions count
+  const { count: txCount } = await sb.from("transactions")
+    .select("id", { count: "exact", head: true }).eq("status", "pending");
+  setBadge("transactions", txCount || 0);
+  // Bets trong open rounds (chưa settle)
+  const { count: betCount } = await sb.from("vote_history")
+    .select("id", { count: "exact", head: true }).eq("status", "pending");
+  setBadge("votes", betCount || 0);
 }
 
 // ===== Bank edit for users (admin) =====
@@ -683,7 +899,7 @@ async function submitBankEdit() {
 }
 
 async function deleteBankForUser() {
-  if (!confirm("Xóa bank của user này?")) return;
+  if (!(await adminConfirm("Xóa bank của user này?", { title: "Xóa bank", danger: true, okText: "Xóa" }))) return;
   const { error } = await sb.from("bank_accounts").delete().eq("user_id", editBankUserId);
   if (error) { toast(error.message, "error"); return; }
   toast("Đã xóa bank", "success");
@@ -704,7 +920,7 @@ async function editBalance(userId, oldBalance) {
 
 async function toggleRole(userId, currentRole) {
   const next = currentRole === "admin" ? "member" : "admin";
-  if (!confirm(`Đổi role sang "${next}"?`)) return;
+  if (!(await adminConfirm(`Đổi role sang "${next}"?`, { title: "Đổi role" }))) return;
   const { error } = await sb.from("profiles").update({ role: next }).eq("id", userId);
   if (error) { toast(error.message, "error"); return; }
   toast(`Role: ${next}`, "success");
