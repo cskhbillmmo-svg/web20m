@@ -157,6 +157,7 @@ function showAdminLogin(errorMsg = "") {
 
 let voteFilter = "all";
 let txFilter = "pending";
+let wFilter = "pending";
 let autoRefreshTimer = 0;
 
 function init() {
@@ -171,6 +172,7 @@ function init() {
       if (tab.dataset.tab === "dashboard") loadDashboard();
       if (tab.dataset.tab === "notifications") loadNotifications();
       if (tab.dataset.tab === "transactions") loadTransactions();
+      if (tab.dataset.tab === "withdraws") loadWithdraws();
       // Clear badge of clicked tab
       setBadge(tab.dataset.tab, 0);
     });
@@ -215,13 +217,14 @@ function init() {
     else if (a === "edit-balance") editBalance(t.dataset.userId, t.dataset.balance);
     else if (a === "adjust-balance") openAdjustBalance(t.dataset.userId, t.dataset.username, t.dataset.balance, t.dataset.mode);
     else if (a === "submit-adjust") submitAdjustBalance();
-    else if (a === "toggle-role") toggleRole(t.dataset.userId, t.dataset.role);
     else if (a === "send-notification") sendNotification();
     else if (a === "approve-tx") doApproveTx(Number(t.dataset.txId), true);
     else if (a === "reject-tx") doApproveTx(Number(t.dataset.txId), false);
     else if (a === "user-history") openUserHistory(t.dataset.userId, t.dataset.username);
     else if (a === "user-withdraws") openUserWithdraws(t.dataset.userId, t.dataset.username);
     else if (a === "toggle-freeze") toggleFreeze(t.dataset.userId, t.dataset.username, t.dataset.frozen === "1");
+    else if (a === "approve-withdraw") doApproveWithdraw(Number(t.dataset.wId), true);
+    else if (a === "reject-withdraw") doApproveWithdraw(Number(t.dataset.wId), false);
     else if (a === "edit-bank") openBankEdit(t.dataset.userId, t.dataset.username);
     else if (a === "submit-edit-bank") submitBankEdit();
     else if (a === "delete-bank") deleteBankForUser();
@@ -235,6 +238,14 @@ function init() {
     });
   });
 
+  document.querySelectorAll("[data-w-filter] .chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      document.querySelectorAll("[data-w-filter] .chip").forEach((c) => c.classList.toggle("is-active", c === chip));
+      wFilter = chip.dataset.wStatus;
+      loadWithdraws();
+    });
+  });
+
   document.querySelector("[data-user-search]")?.addEventListener("input", (e) => {
     loadUsers(e.target.value.trim());
   });
@@ -243,15 +254,16 @@ function init() {
   loadAllRounds();
   refreshBadges();
 
-  // Realtime — admin nhận yêu cầu giao dịch mới
+  // Realtime — admin nhận yêu cầu rút tiền mới
   sb.channel("admin-tx")
     .on("postgres_changes",
       { event: "INSERT", schema: "public", table: "transactions" },
       (payload) => {
-        toast(`Có yêu cầu ${payload.new.type === "deposit" ? "nạp" : "rút"} mới · ${fmtNum(payload.new.amount)}đ`, "success");
-        bumpBadge("transactions");
+        if (payload.new.type !== "withdraw") return;
+        toast(`Yêu cầu RÚT mới · ${fmtNum(Math.floor(payload.new.amount / 1000))}K`, "success");
+        bumpBadge("withdraws");
         const activePanel = document.querySelector(".tab.is-active")?.dataset.tab;
-        if (activePanel === "transactions") loadTransactions();
+        if (activePanel === "withdraws") loadWithdraws();
       }
     )
     .subscribe();
@@ -420,6 +432,71 @@ async function loadRounds() {
     wrap.innerHTML = '<p class="muted">Chưa có round nào đang mở. Bấm "+ Tạo round mới".</p>';
     return;
   }
+
+  // Fetch bets cho tất cả rounds in 1 query (không join profiles để tránh FK error)
+  const roundIds = data.map((r) => r.round_id);
+  const { data: bets } = await sb
+    .from("vote_history")
+    .select("round_id, user_id, choice, amount, created_at")
+    .in("round_id", roundIds)
+    .order("created_at", { ascending: false });
+
+  // Fetch profiles riêng để map user_id → username
+  const userIds = [...new Set((bets || []).map((b) => b.user_id))];
+  const userMap = {};
+  if (userIds.length) {
+    const { data: profs } = await sb.from("profiles").select("id, username").in("id", userIds);
+    (profs || []).forEach((p) => (userMap[p.id] = p.username));
+  }
+
+  // Group bets by round → by choice → list users + amounts
+  const byRound = {};
+  (bets || []).forEach((b) => {
+    const rid = b.round_id;
+    if (!byRound[rid]) byRound[rid] = { choices: {}, users: {} };
+    if (!byRound[rid].choices[b.choice]) {
+      byRound[rid].choices[b.choice] = { total: 0, users: new Map() };
+    }
+    const ch = byRound[rid].choices[b.choice];
+    ch.total += b.amount;
+    const uname = userMap[b.user_id] || b.user_id.slice(0, 6);
+    ch.users.set(uname, (ch.users.get(uname) || 0) + b.amount);
+    byRound[rid].users[uname] = (byRound[rid].users[uname] || 0) + b.amount;
+  });
+
+  function renderChoicePreview(roundId) {
+    const round = byRound[roundId];
+    if (!round || !Object.keys(round.choices).length) {
+      return '<div class="choice-preview"><span class="muted">Chưa có ai cược</span></div>';
+    }
+    const sortedChoices = Object.entries(round.choices).sort((a, b) => b[1].total - a[1].total);
+    const sortedUsers = Object.entries(round.users).sort((a, b) => b[1] - a[1]);
+
+    return `
+      <div class="choice-preview">
+        ${sortedChoices.map(([c, info]) => {
+          const userList = [...info.users.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .map(([u, amt]) => `<span class="cu-user">${esc(u)}<em>${fmtNum(amt)}</em></span>`)
+            .join("");
+          return `
+            <div class="choice-block">
+              <div class="choice-block__head">
+                <strong>${esc(c)}</strong>
+                <span class="cb-total">${fmtNum(info.total)}</span>
+              </div>
+              <div class="choice-block__users">${userList}</div>
+            </div>
+          `;
+        }).join("")}
+        <div class="round-bettors">
+          <span class="muted">Người chơi:</span>
+          ${sortedUsers.map(([u, amt]) => `<span class="bettor-tag">${esc(u)} · ${fmtNum(amt)}</span>`).join(" ")}
+        </div>
+      </div>
+    `;
+  }
+
   wrap.innerHTML = data.map((r) => `
     <div class="round-card${r.round_id === currentRoundId ? " is-selected" : ""}" data-round-id="${r.round_id}">
       <div class="title">
@@ -430,6 +507,7 @@ async function loadRounds() {
       <div class="row"><span class="muted">Bets</span><strong>${r.bet_count}</strong></div>
       <div class="row"><span class="muted">Tổng cược</span><strong>${fmtNum(r.total_amount)}</strong></div>
       <div class="row"><span class="muted">Người chơi</span><strong>${r.unique_bettors}</strong></div>
+      ${renderChoicePreview(r.round_id)}
       <div class="round-actions">
         ${r.status === "open" ? `<button class="btn-link" data-action="close-round" data-round-id="${r.round_id}">Đóng cược</button>` : ""}
         ${r.status !== "settled" ? `<button class="btn-link danger" data-action="delete-round" data-round-id="${r.round_id}">Xóa</button>` : ""}
@@ -438,10 +516,15 @@ async function loadRounds() {
   `).join("");
   wrap.querySelectorAll(".round-card").forEach((c) => {
     c.addEventListener("click", (e) => {
-      if (e.target.closest("[data-action]")) return; // don't trigger select when clicking action button
+      if (e.target.closest("[data-action]")) return;
       selectRound(Number(c.dataset.roundId));
     });
   });
+
+  // Auto-select first round nếu chưa có cái nào được chọn
+  if (!currentRoundId && data.length > 0) {
+    selectRound(data[0].round_id);
+  }
 }
 
 async function loadAllRounds() {
@@ -495,9 +578,17 @@ async function selectRound(id) {
 
   const { data: bets, error } = await sb
     .from("vote_history")
-    .select("id, user_id, choice, amount, payout, status, created_at, profiles(username)")
+    .select("id, user_id, choice, amount, payout, status, created_at")
     .eq("round_id", id)
     .order("created_at", { ascending: false });
+  // Map user_id → username
+  const _uids = [...new Set((bets || []).map((b) => b.user_id))];
+  const _uMap = {};
+  if (_uids.length) {
+    const { data: _profs } = await sb.from("profiles").select("id, username").in("id", _uids);
+    (_profs || []).forEach((p) => (_uMap[p.id] = p.username));
+  }
+  (bets || []).forEach((b) => (b.profiles = { username: _uMap[b.user_id] }));
   const tbody = document.querySelector("[data-bets-body]");
   const distEl = document.querySelector("[data-choice-dist]");
   const countEl = document.querySelector("[data-bet-count]");
@@ -632,6 +723,7 @@ async function loadUsers(search = "") {
       ? `<small>${esc(b.bank_name)} · ${esc(b.account_number)}</small>`
       : `<small class="muted">chưa liên kết</small>`;
     const frozen = !!u.is_frozen;
+    const ds = `data-user-id="${u.id}" data-username="${esc(u.username)}"`;
     return `
     <tr${frozen ? ' class="user-frozen"' : ''}>
       <td>
@@ -643,14 +735,35 @@ async function loadUsers(search = "") {
       <td class="num">${fmtNum(u.vote_points)}</td>
       <td>${fmtTime(u.created_at)}</td>
       <td>
-        ${bankCell}<br>
-        <button class="btn-link" data-action="adjust-balance" data-user-id="${u.id}" data-username="${esc(u.username)}" data-balance="${u.balance_points}" data-mode="add">+ Cộng</button>
-        <button class="btn-link" data-action="adjust-balance" data-user-id="${u.id}" data-username="${esc(u.username)}" data-balance="${u.balance_points}" data-mode="sub">− Trừ</button>
-        <button class="btn-link" data-action="user-history" data-user-id="${u.id}" data-username="${esc(u.username)}">LS Vote</button>
-        <button class="btn-link" data-action="user-withdraws" data-user-id="${u.id}" data-username="${esc(u.username)}">LS Rút</button>
-        <button class="btn-link" data-action="edit-bank" data-user-id="${u.id}" data-username="${esc(u.username)}">${b ? "Sửa bank" : "Thêm bank"}</button>
-        <button class="btn-link${frozen ? ' danger' : ''}" data-action="toggle-freeze" data-user-id="${u.id}" data-username="${esc(u.username)}" data-frozen="${frozen ? '1' : '0'}">${frozen ? 'Mở khóa' : 'Đóng băng'}</button>
-        <button class="btn-link" data-action="toggle-role" data-user-id="${u.id}" data-role="${u.role}">${u.role === "admin" ? "Bỏ admin" : "Set admin"}</button>
+        <div class="user-bank-info">${bankCell}</div>
+        <div class="action-grid">
+          <button class="act act--add" data-action="adjust-balance" ${ds} data-balance="${u.balance_points}" data-mode="add" title="Cộng điểm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            <span>Cộng</span>
+          </button>
+          <button class="act act--sub" data-action="adjust-balance" ${ds} data-balance="${u.balance_points}" data-mode="sub" title="Trừ điểm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg>
+            <span>Trừ</span>
+          </button>
+          <button class="act act--info" data-action="user-history" ${ds} title="Lịch sử VOTE">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <span>LS Vote</span>
+          </button>
+          <button class="act act--info" data-action="user-withdraws" ${ds} title="Lịch sử rút tiền">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7 7 7-7"/></svg>
+            <span>LS Rút</span>
+          </button>
+          <button class="act act--neutral" data-action="edit-bank" ${ds} title="${b ? 'Sửa thông tin ngân hàng' : 'Thêm thông tin ngân hàng'}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 11h10M7 15h6"/></svg>
+            <span>${b ? "Sửa bank" : "Thêm bank"}</span>
+          </button>
+          <button class="act ${frozen ? 'act--unfreeze' : 'act--freeze'}" data-action="toggle-freeze" ${ds} data-frozen="${frozen ? '1' : '0'}" title="${frozen ? 'Mở khóa tài khoản' : 'Đóng băng tài khoản'}">
+            ${frozen
+              ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0"/></svg>'
+              : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>'}
+            <span>${frozen ? "Mở khóa" : "Đóng băng"}</span>
+          </button>
+        </div>
       </td>
     </tr>
   `;
@@ -806,6 +919,125 @@ async function openUserWithdraws(userId, username) {
   `).join("");
 }
 
+// ===== Duyệt rút tiền (tab Rút tiền) =====
+async function loadWithdraws() {
+  const tbody = document.querySelector("[data-withdraws-body]");
+  if (!tbody) return;
+
+  // Lấy tất cả withdraw transactions
+  let q = sb.from("transactions")
+    .select("id, user_id, amount, status, note, created_at, updated_at")
+    .eq("type", "withdraw")
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (wFilter !== "all") q = q.eq("status", wFilter);
+  const { data, error } = await q;
+  if (error) { tbody.innerHTML = `<tr><td colspan="7" class="muted">${esc(error.message)}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="7" class="muted">Không có yêu cầu rút nào</td></tr>'; return; }
+
+  // Batch fetch usernames + banks
+  const userIds = [...new Set(data.map((t) => t.user_id))];
+  const { data: profs } = await sb.from("profiles").select("id, username").in("id", userIds);
+  const userMap = {};
+  (profs || []).forEach((p) => (userMap[p.id] = p.username));
+  data.forEach((t) => (t.profiles = { username: userMap[t.user_id] }));
+  const { data: banks } = await sb.from("bank_accounts")
+    .select("user_id, bank_name, account_number, account_holder").in("user_id", userIds);
+  const bankByUser = {};
+  (banks || []).forEach((b) => (bankByUser[b.user_id] = b));
+
+  const statusBadge = {
+    pending: { label: "Chờ duyệt", color: "#f59e0b" },
+    success: { label: "Đã duyệt", color: "#18c269" },
+    failed: { label: "Thất bại", color: "#ef4444" },
+    cancelled: { label: "Từ chối", color: "#71757d" },
+  };
+
+  tbody.innerHTML = data.map((t) => {
+    const b = bankByUser[t.user_id];
+    const k = Math.floor(t.amount / 1000);
+    const status = statusBadge[t.status] || { label: t.status, color: "#fff" };
+    const bankInfo = b
+      ? `<div class="w-bank"><strong>${esc(b.bank_name)}</strong><br>${esc(b.account_number)}<br><span class="muted">${esc(b.account_holder)}</span></div>`
+      : `<span class="muted">chưa liên kết bank</span>`;
+    return `
+      <tr>
+        <td><strong>${esc(t.profiles?.username || t.user_id.slice(0, 8))}</strong></td>
+        <td class="num"><strong>${fmtNum(k)}K</strong><br><span class="muted">${fmtNum(t.amount)}đ</span></td>
+        <td>${bankInfo}</td>
+        <td>${esc(t.note || "—")}</td>
+        <td><span style="color:${status.color};font-weight:700">${status.label}</span></td>
+        <td>${fmtTime(t.created_at)}</td>
+        <td>
+          ${t.status === "pending" ? `
+            <button class="act act--add" data-action="approve-withdraw" data-w-id="${t.id}" ${!b ? 'disabled title="Chưa có bank — không duyệt được"' : ''}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Duyệt</span>
+            </button>
+            <button class="act act--freeze" data-action="reject-withdraw" data-w-id="${t.id}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <span>Từ chối</span>
+            </button>
+          ` : "—"}
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function doApproveWithdraw(txId, approve) {
+  if (approve) {
+    // Lấy tx + bank info để admin xem trước khi duyệt
+    const { data: tx } = await sb.from("transactions").select("*").eq("id", txId).maybeSingle();
+    if (tx) {
+      const { data: p } = await sb.from("profiles").select("username").eq("id", tx.user_id).maybeSingle();
+      tx.profiles = { username: p?.username };
+    }
+    if (!tx) { toast("Không tìm thấy giao dịch", "error"); return; }
+    const { data: banks } = await sb.from("bank_accounts").select("*").eq("user_id", tx.user_id).limit(1);
+    const bank = banks?.[0];
+    if (!bank) { toast("User chưa liên kết bank — không duyệt được", "error"); return; }
+    const k = Math.floor(tx.amount / 1000);
+    const msg = `Chuyển khoản đến tài khoản sau rồi xác nhận:
+━━━━━━━━━━━━━━━━━━━━
+User : ${tx.profiles?.username || tx.user_id.slice(0, 8)}
+Tiền : ${fmtNum(k)}K (${fmtNum(tx.amount)}đ)
+━━━━━━━━━━━━━━━━━━━━
+Ngân hàng : ${bank.bank_name}
+Số TK     : ${bank.account_number}
+Chủ TK    : ${bank.account_holder}
+━━━━━━━━━━━━━━━━━━━━`;
+    const note = await adminPrompt(msg, "", {
+      title: "Duyệt rút tiền",
+      okText: "Đã chuyển — Duyệt",
+      placeholder: "Ghi chú thêm (tùy chọn)",
+    });
+    if (note === false) return;
+    const noteText = typeof note === "string" ? note.trim() : "";
+    if (noteText) await sb.from("transactions").update({ note: noteText }).eq("id", txId);
+    const { error } = await sb.rpc("approve_transaction", { p_tx_id: txId, p_approve: true });
+    if (error) { toast(error.message, "error"); return; }
+    toast(`Đã duyệt rút ${fmtNum(k)}K`, "success");
+    loadWithdraws();
+    refreshBadges();
+  } else {
+    // Reject — prompt lý do
+    const reason = await adminPrompt(
+      "Lý do từ chối (sẽ hiện cho user):\nSố tiền sẽ tự động hoàn về tài khoản user.",
+      "Lỗi liên kết tài khoản ngân hàng (Thông tin người nhận không trùng khớp)",
+      { title: "Từ chối rút tiền", danger: true, okText: "Từ chối + Hoàn tiền" }
+    );
+    if (reason === false) return;
+    const reasonText = typeof reason === "string" ? reason.trim() : "";
+    if (reasonText) await sb.from("transactions").update({ note: reasonText }).eq("id", txId);
+    const { error } = await sb.rpc("approve_transaction", { p_tx_id: txId, p_approve: false });
+    if (error) { toast(error.message, "error"); return; }
+    toast("Đã từ chối và hoàn tiền", "success");
+    loadWithdraws();
+    refreshBadges();
+  }
+}
+
 // ===== Freeze / unfreeze account =====
 async function toggleFreeze(userId, username, isFrozen) {
   const action = isFrozen ? "Mở khóa" : "Đóng băng";
@@ -847,11 +1079,12 @@ function bumpBadge(name) {
 }
 
 async function refreshBadges() {
-  // Pending transactions count
-  const { count: txCount } = await sb.from("transactions")
-    .select("id", { count: "exact", head: true }).eq("status", "pending");
-  setBadge("transactions", txCount || 0);
-  // Bets trong open rounds (chưa settle)
+  // Pending withdraw count
+  const { count: wCount } = await sb.from("transactions")
+    .select("id", { count: "exact", head: true })
+    .eq("type", "withdraw").eq("status", "pending");
+  setBadge("withdraws", wCount || 0);
+  // Bets pending (chưa settle)
   const { count: betCount } = await sb.from("vote_history")
     .select("id", { count: "exact", head: true }).eq("status", "pending");
   setBadge("votes", betCount || 0);

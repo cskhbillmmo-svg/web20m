@@ -17,10 +17,9 @@
           VOTE<span class="tab-badge" data-badge="votes" hidden>0</span>
         </button>
         <button class="tab" data-tab="users" type="button">Users</button>
-        <button class="tab" data-tab="transactions" type="button">
-          Giao dịch<span class="tab-badge" data-badge="transactions" hidden>0</span>
+        <button class="tab" data-tab="withdraws" type="button">
+          Rút tiền<span class="tab-badge" data-badge="withdraws" hidden>0</span>
         </button>
-        <button class="tab" data-tab="notifications" type="button">Thông báo</button>
         <button class="tab" data-tab="dashboard" type="button">Dashboard</button>
       </nav>
       <div class="admin-user">
@@ -148,66 +147,15 @@
         </section>
       </section>
 
-      <!-- ===== NOTIFICATIONS TAB ===== -->
-      <section class="tab-panel" data-panel="notifications" hidden>
+      <!-- ===== WITHDRAW APPROVAL TAB ===== -->
+      <section class="tab-panel" data-panel="withdraws" hidden>
         <div class="panel-head">
-          <h1>Thông báo hệ thống</h1>
-        </div>
-
-        <section class="card">
-          <h2>Gửi thông báo mới</h2>
-          <form class="notif-form" data-notif-form>
-            <label>Tiêu đề
-              <input name="title" required placeholder="VD: Bảo trì hệ thống" />
-            </label>
-            <label>Nội dung
-              <textarea name="body" required rows="4" placeholder="Nội dung thông báo..."></textarea>
-            </label>
-            <label>Đối tượng
-              <select name="audience">
-                <option value="all">Tất cả user</option>
-                <option value="user">Một user cụ thể</option>
-              </select>
-            </label>
-            <label data-notif-user-row hidden>Username
-              <input name="username" placeholder="VD: demo8" />
-            </label>
-            <button class="btn-primary" type="submit">Gửi thông báo</button>
-          </form>
-        </section>
-
-        <section class="card">
-          <div class="card-head">
-            <h2>Thông báo đã gửi</h2>
-            <button class="btn-link" type="button" data-action="reload-notifs">Tải lại</button>
-          </div>
-          <div class="bets-table-wrap">
-            <table class="bets-table">
-              <thead>
-                <tr>
-                  <th>Tiêu đề</th>
-                  <th>Nội dung</th>
-                  <th>Đối tượng</th>
-                  <th>Gửi lúc</th>
-                  <th>Hành động</th>
-                </tr>
-              </thead>
-              <tbody data-notifs-body>
-                <tr><td colspan="5" class="muted">Đang tải…</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </section>
-
-      <!-- ===== TRANSACTIONS TAB ===== -->
-      <section class="tab-panel" data-panel="transactions" hidden>
-        <div class="panel-head">
-          <h1>Giao dịch</h1>
-          <div class="filter-chips" data-tx-filter>
-            <button class="chip is-active" data-tx-status="pending" type="button">Chờ duyệt</button>
-            <button class="chip" data-tx-status="success" type="button">Đã duyệt</button>
-            <button class="chip" data-tx-status="all" type="button">Tất cả</button>
+          <h1>Duyệt rút tiền</h1>
+          <div class="filter-chips" data-w-filter>
+            <button class="chip is-active" data-w-status="pending" type="button">Chờ duyệt</button>
+            <button class="chip" data-w-status="success" type="button">Đã duyệt</button>
+            <button class="chip" data-w-status="cancelled" type="button">Đã từ chối</button>
+            <button class="chip" data-w-status="all" type="button">Tất cả</button>
           </div>
         </div>
         <section class="card">
@@ -216,15 +164,15 @@
               <thead>
                 <tr>
                   <th>User</th>
-                  <th>Loại</th>
-                  <th class="num">Số tiền</th>
+                  <th class="num">Số tiền (K)</th>
+                  <th>Ngân hàng</th>
                   <th>Ghi chú</th>
                   <th>Status</th>
                   <th>Tạo lúc</th>
                   <th>Hành động</th>
                 </tr>
               </thead>
-              <tbody data-tx-body>
+              <tbody data-withdraws-body>
                 <tr><td colspan="7" class="muted">Đang tải…</td></tr>
               </tbody>
             </table>
