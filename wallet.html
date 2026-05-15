@@ -64,6 +64,12 @@
             <h3>Yêu cầu nạp tiền</h3>
             <p class="modal-note">Số tiền (đ) — admin sẽ duyệt sau khi xác nhận chuyển khoản</p>
             <input type="number" name="amount" min="10000" step="1000" placeholder="VD: 100000" required />
+            <div class="quick-amounts" data-quick-amount>
+              <button type="button" data-amount="100000">+100K</button>
+              <button type="button" data-amount="500000">+500K</button>
+              <button type="button" data-amount="1000000">+1M</button>
+              <button type="button" data-amount="5000000">+5M</button>
+            </div>
             <textarea name="note" rows="2" placeholder="Ghi chú (mã giao dịch / ngân hàng)"></textarea>
             <div class="modal-row">
               <button type="button" data-close>Hủy</button>
@@ -77,6 +83,12 @@
             <h3>Yêu cầu rút tiền</h3>
             <p class="modal-note">Yêu cầu sẽ trừ vào số dư khi admin duyệt</p>
             <input type="number" name="amount" min="10000" step="1000" placeholder="VD: 100000" required />
+            <div class="quick-amounts" data-quick-amount>
+              <button type="button" data-amount="100000">+100K</button>
+              <button type="button" data-amount="500000">+500K</button>
+              <button type="button" data-amount="1000000">+1M</button>
+              <button type="button" data-amount="5000000">+5M</button>
+            </div>
             <textarea name="note" rows="2" placeholder="Ghi chú"></textarea>
             <div class="modal-row">
               <button type="button" data-close>Hủy</button>

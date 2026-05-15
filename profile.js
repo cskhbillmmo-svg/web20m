@@ -73,9 +73,10 @@ document.addEventListener("keydown", (e) => {
 
 const balanceEl = document.querySelector("[data-balance]");
 let currentBalance = Number(balanceEl?.textContent || 0);
-function setBalance(value) {
-  currentBalance = value;
-  if (balanceEl) balanceEl.textContent = currency.format(value);
+// Hiển thị balance theo K (1K = 1000 points/VND)
+function setBalance(pointsValue) {
+  currentBalance = pointsValue;
+  if (balanceEl) balanceEl.textContent = String(Math.floor((Number(pointsValue) || 0) / 1000));
 }
 
 const actions = {

@@ -95,6 +95,16 @@ document.querySelectorAll("[data-close]").forEach((b) => {
   b.addEventListener("click", () => b.closest("dialog")?.close());
 });
 
+// Quick amount buttons (+100K, +500K, ...)
+document.querySelectorAll("[data-quick-amount] button[data-amount]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const input = btn.closest("dialog").querySelector("input[name='amount']");
+    const current = Number(input.value) || 0;
+    const add = Number(btn.dataset.amount) || 0;
+    input.value = String(current + add);
+  });
+});
+
 document.querySelector("[data-submit-deposit]")?.addEventListener("click", async () => {
   const dlg = document.querySelector('[data-modal="deposit"]');
   const f = dlg.querySelector("form");
@@ -132,4 +142,12 @@ document.querySelector("[data-submit-withdraw]")?.addEventListener("click", asyn
   loadTransactions();
 });
 
-loadWallet();
+loadWallet().then(() => {
+  // Auto-open modal nếu có query ?action=deposit hoặc ?action=withdraw
+  const action = new URLSearchParams(location.search).get("action");
+  if (action === "withdraw") {
+    document.querySelector('[data-modal="withdraw"]')?.showModal();
+  } else if (action === "deposit") {
+    document.querySelector('[data-modal="deposit"]')?.showModal();
+  }
+});

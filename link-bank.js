@@ -17,25 +17,19 @@ const bankList = document.querySelector("[data-bank-list]");
 const addCard = document.querySelector("[data-no-bank]");
 const bankForm = document.querySelector("[data-bank-form]");
 
-function showBankDetails(bank) {
-  bankList.hidden = false;
-  addCard.hidden = true;
-  bankForm.hidden = true;
-  document.querySelector("[data-bank-name]").textContent = bank.bank_name;
-  document.querySelector("[data-bank-acc]").textContent = bank.account_number;
-  document.querySelector("[data-bank-holder]").textContent = bank.account_holder;
-}
+function setState(state, bank) {
+  // HAS_BANK: readonly view, no add/form
+  // NO_BANK: show + button only
+  // ADDING: show form only
+  bankList.hidden = state !== "HAS_BANK";
+  addCard.hidden = state !== "NO_BANK";
+  bankForm.hidden = state !== "ADDING";
 
-function showAddCard() {
-  bankList.hidden = true;
-  addCard.hidden = false;
-  bankForm.hidden = true;
-}
-
-function showForm() {
-  bankList.hidden = true;
-  addCard.hidden = true;
-  bankForm.hidden = false;
+  if (state === "HAS_BANK" && bank) {
+    document.querySelector("[data-bank-name]").textContent = bank.bank_name;
+    document.querySelector("[data-bank-acc]").textContent = bank.account_number;
+    document.querySelector("[data-bank-holder]").textContent = bank.account_holder;
+  }
 }
 
 async function loadBank() {
@@ -46,13 +40,13 @@ async function loadBank() {
   const { data, error } = await sb.from("bank_accounts")
     .select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1);
   if (error) { toast("Lỗi: " + error.message); return; }
-  if (data?.length) showBankDetails(data[0]);
-  else showAddCard();
+  if (data?.length) setState("HAS_BANK", data[0]);
+  else setState("NO_BANK");
 }
 
-addCard?.addEventListener("click", showForm);
+addCard?.addEventListener("click", () => setState("ADDING"));
 
-document.querySelector("[data-cancel-bank-form]")?.addEventListener("click", loadBank);
+document.querySelector("[data-cancel-bank-form]")?.addEventListener("click", () => setState("NO_BANK"));
 
 bankForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -71,6 +65,16 @@ bankForm?.addEventListener("submit", async (e) => {
   }
 
   const { data: { user } } = await sb.auth.getUser();
+
+  // Double-check: chỉ cho insert nếu user chưa có bank
+  const { data: existing } = await sb.from("bank_accounts")
+    .select("id").eq("user_id", user.id).limit(1);
+  if (existing?.length) {
+    toast("Bạn đã liên kết tài khoản ngân hàng. Liên hệ CSKH để chỉnh sửa.");
+    loadBank();
+    return;
+  }
+
   const { error } = await sb.from("bank_accounts").insert({
     user_id: user.id,
     bank_name: bankName,

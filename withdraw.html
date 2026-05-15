@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trung tâm rút tiền</title>
+    <link rel="stylesheet" href="./profile.css" />
+  </head>
+  <body>
+    <main class="app-screen">
+      <section class="withdraw-center">
+        <header class="withdraw-center__header">
+          <a class="header-back" href="./profile.html" aria-label="Quay lại"></a>
+          <h1>Trung tâm rút tiền</h1>
+          <a class="withdraw-history-link" href="./withdraw-history.html">Hồ sơ rút tiền</a>
+        </header>
+
+        <div class="withdraw-card">
+          <div class="withdraw-row">
+            <span class="withdraw-label">Số điểm tự động (K)</span>
+            <input
+              class="withdraw-input"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              step="1"
+              data-amount
+            />
+            <button type="button" class="withdraw-all" data-fill-all>Tất cả</button>
+          </div>
+          <div class="withdraw-divider"></div>
+          <a class="withdraw-rule" href="#" data-action="show-rule">
+            <span class="info-icon" aria-hidden="true">ⓘ</span>
+            <span>Nguyên tắc nhận</span>
+          </a>
+        </div>
+
+        <div class="withdraw-preview">
+          <span>VND：</span>
+          <strong data-vnd>0K</strong>
+        </div>
+
+        <button class="withdraw-submit" type="button" data-submit>Rút tiền ngay lập tức</button>
+
+        <div class="toast toast--center" role="status" aria-live="polite" hidden>
+          <span class="toast__icon" aria-hidden="true">!</span>
+          <span class="toast__text"></span>
+        </div>
+
+        <!-- Modal: rule info -->
+        <dialog data-modal="rule" class="wallet-modal">
+          <form method="dialog">
+            <h3>Nguyên tắc nhận tiền</h3>
+            <p class="modal-note">
+              1. Thấp nhất 3000 điểm tương đương 3000K<br>
+              2. Số lượng rút: Tối thiểu 1 lần, tối đa 10 lần.<br>
+              3. Thời gian xử lý: Nhanh 1-2 phút, chậm 5-7 phút.<br>
+              4. Mật khẩu rút tiền chỉ đổi qua CSKH sau khi đã thiết lập.
+            </p>
+            <div class="modal-row">
+              <button type="button" data-close class="primary">Đã hiểu</button>
+            </div>
+          </form>
+        </dialog>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script src="./withdraw.js"></script>
+  </body>
+</html>

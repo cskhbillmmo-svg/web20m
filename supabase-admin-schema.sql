@@ -222,6 +222,48 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
+-- 6b2. Bank accounts — chỉ 1 bank/user; admin được sửa của ai cũng được
+-- ---------------------------------------------------------------------
+-- Hard limit: mỗi user chỉ có tối đa 1 bank account (unique constraint)
+create unique index if not exists bank_accounts_one_per_user
+  on public.bank_accounts(user_id);
+
+-- User chỉ insert nếu chưa có (unique index ở trên enforce)
+-- User KHÔNG được update/delete bank của mình (chỉ admin được sửa)
+drop policy if exists "bank own all" on public.bank_accounts;
+drop policy if exists "bank read own" on public.bank_accounts;
+drop policy if exists "bank insert own" on public.bank_accounts;
+
+create policy "bank read own" on public.bank_accounts
+  for select using (auth.uid() = user_id);
+
+create policy "bank insert own once" on public.bank_accounts
+  for insert with check (
+    auth.uid() = user_id
+    and not exists (select 1 from public.bank_accounts where user_id = auth.uid())
+  );
+
+-- Admin full access (read/update/delete cho mọi user)
+drop policy if exists "bank admin all" on public.bank_accounts;
+create policy "bank admin all" on public.bank_accounts
+  for all using (public.is_admin(auth.uid()))
+  with check (public.is_admin(auth.uid()));
+
+-- ---------------------------------------------------------------------
+-- 6b3. Transactions — track update time (Trạng thái cột)
+-- ---------------------------------------------------------------------
+alter table public.transactions
+  add column if not exists updated_at timestamptz not null default now();
+
+create or replace function public.touch_tx_updated_at()
+returns trigger language plpgsql as $$
+begin new.updated_at = now(); return new; end $$;
+
+drop trigger if exists transactions_touch on public.transactions;
+create trigger transactions_touch before update on public.transactions
+  for each row execute procedure public.touch_tx_updated_at();
+
+-- ---------------------------------------------------------------------
 -- 6c. Transactions — user can insert deposit/withdraw requests
 -- ---------------------------------------------------------------------
 drop policy if exists "tx insert own pending" on public.transactions;
@@ -277,6 +319,63 @@ begin
 
   update public.transactions set status = 'success' where id = p_tx_id;
   return jsonb_build_object('id', p_tx_id, 'type', tx.type, 'amount', tx.amount, 'status', 'success');
+end $$;
+
+-- ---------------------------------------------------------------------
+-- 6e. Admin adjust balance — manual +/- points with audit
+-- ---------------------------------------------------------------------
+-- Mở rộng transaction type enum để có 'admin_adjust'
+alter table public.transactions drop constraint if exists transactions_type_check;
+alter table public.transactions add constraint transactions_type_check
+  check (type in ('deposit','withdraw','vote','reward','refund','admin_adjust'));
+
+create or replace function public.adjust_balance(
+  p_user_id uuid,
+  p_delta integer,
+  p_note text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  new_bal integer;
+begin
+  if not public.is_admin(auth.uid()) then
+    raise exception 'forbidden';
+  end if;
+  if p_delta = 0 then
+    raise exception 'delta cannot be zero';
+  end if;
+
+  update public.profiles
+    set balance_points = balance_points + p_delta
+    where id = p_user_id
+    returning balance_points into new_bal;
+
+  if new_bal is null then raise exception 'user not found'; end if;
+  if new_bal < 0 then
+    -- rollback
+    update public.profiles set balance_points = balance_points - p_delta where id = p_user_id;
+    raise exception 'insufficient balance after deduction (would be %)', new_bal;
+  end if;
+
+  insert into public.transactions (user_id, type, amount, status, note)
+  values (
+    p_user_id,
+    'admin_adjust',
+    abs(p_delta),
+    'success',
+    coalesce(nullif(p_note, ''), case when p_delta > 0 then 'Admin cộng điểm' else 'Admin trừ điểm' end)
+      || ' (' || case when p_delta > 0 then '+' else '' end || p_delta::text || ')'
+  );
+
+  return jsonb_build_object(
+    'user_id', p_user_id,
+    'delta', p_delta,
+    'new_balance', new_bal
+  );
 end $$;
 
 -- ---------------------------------------------------------------------

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cài đặt</title>
+    <link rel="stylesheet" href="./profile.css" />
+  </head>
+  <body>
+    <main class="app-screen">
+      <section class="settings-page">
+        <header class="page-header">
+          <a class="header-back" href="./profile.html" aria-label="Quay lại"></a>
+          <h1>Cài đặt</h1>
+        </header>
+
+        <ul class="settings-list">
+          <li>
+            <a class="settings-row" href="./basic-info.html">
+              <span class="settings-label">Thông tin cơ bản</span>
+              <span class="settings-chevron"></span>
+            </a>
+          </li>
+          <li>
+            <a class="settings-row" href="./change-password.html">
+              <span class="settings-label">Mật khẩu đăng nhập</span>
+              <span class="settings-chevron"></span>
+            </a>
+          </li>
+          <li>
+            <button class="settings-row" type="button" data-action="fund-password">
+              <span class="settings-label">Mật khẩu quỹ</span>
+              <span class="settings-status" data-fund-status>Chưa thiết lập</span>
+              <span class="settings-chevron"></span>
+            </button>
+          </li>
+          <li>
+            <button class="settings-row" type="button" data-action="language">
+              <span class="settings-label">Sự lựa chọn ngôn ngữ</span>
+              <span class="settings-chevron"></span>
+            </button>
+          </li>
+        </ul>
+
+        <button class="settings-logout" type="button" data-action="logout">Đăng xuất</button>
+
+        <div class="toast toast--center" role="status" aria-live="polite" hidden>
+          <span class="toast__icon" aria-hidden="true" hidden></span>
+          <span class="toast__text"></span>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script src="./settings.js"></script>
+  </body>
+</html>

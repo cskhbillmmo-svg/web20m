@@ -170,10 +170,15 @@ function init() {
     else if (a === "close-round") doCloseRound(Number(t.dataset.roundId));
     else if (a === "delete-round") doDeleteRound(Number(t.dataset.roundId));
     else if (a === "edit-balance") editBalance(t.dataset.userId, t.dataset.balance);
+    else if (a === "adjust-balance") openAdjustBalance(t.dataset.userId, t.dataset.username, t.dataset.balance, t.dataset.mode);
+    else if (a === "submit-adjust") submitAdjustBalance();
     else if (a === "toggle-role") toggleRole(t.dataset.userId, t.dataset.role);
     else if (a === "send-notification") sendNotification();
     else if (a === "approve-tx") doApproveTx(Number(t.dataset.txId), true);
     else if (a === "reject-tx") doApproveTx(Number(t.dataset.txId), false);
+    else if (a === "edit-bank") openBankEdit(t.dataset.userId, t.dataset.username);
+    else if (a === "submit-edit-bank") submitBankEdit();
+    else if (a === "delete-bank") deleteBankForUser();
   });
 
   document.querySelectorAll("[data-tx-filter] .chip").forEach((chip) => {
@@ -311,7 +316,19 @@ async function loadTransactions() {
 
 async function doApproveTx(txId, approve) {
   const word = approve ? "duyệt" : "từ chối";
-  if (!confirm(`Bạn chắc chắn ${word} giao dịch này?`)) return;
+
+  // Hỏi note (đặc biệt cần khi từ chối để user biết lý do)
+  const promptMsg = approve
+    ? `DUYỆT giao dịch này?\nGhi chú (tùy chọn, hiện cho user thấy):`
+    : `TỪ CHỐI giao dịch này?\nLý do (sẽ hiện cho user):`;
+  const note = window.prompt(promptMsg, approve ? "" : "Lỗi liên kết tài khoản ngân hàng (Thông tin người nhận không trùng khớp)");
+  if (note === null) return; // user bấm cancel
+
+  // Update note trước (vì RPC chỉ approve/reject, không nhận note)
+  if (note.trim()) {
+    await sb.from("transactions").update({ note: note.trim() }).eq("id", txId);
+  }
+
   const { data, error } = await sb.rpc("approve_transaction", { p_tx_id: txId, p_approve: approve });
   if (error) { toast(error.message, "error"); return; }
   toast(approve ? `Đã ${word} ${fmtNum(data.amount)}đ` : "Đã từ chối", "success");
@@ -543,7 +560,21 @@ async function loadUsers(search = "") {
   const { data, error } = await q;
   if (error) { tbody.innerHTML = `<tr><td colspan="6" class="muted">${esc(error.message)}</td></tr>`; return; }
   if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="muted">Không có user</td></tr>'; return; }
-  tbody.innerHTML = data.map((u) => `
+
+  // Fetch banks separately (1 query)
+  const userIds = data.map((u) => u.id);
+  const { data: banks } = await sb.from("bank_accounts")
+    .select("user_id, bank_name, account_number, account_holder")
+    .in("user_id", userIds);
+  const bankByUser = {};
+  (banks || []).forEach((b) => (bankByUser[b.user_id] = b));
+
+  tbody.innerHTML = data.map((u) => {
+    const b = bankByUser[u.id];
+    const bankCell = b
+      ? `<small>${esc(b.bank_name)} · ${esc(b.account_number)}</small>`
+      : `<small class="muted">chưa liên kết</small>`;
+    return `
     <tr>
       <td><strong>${esc(u.username)}</strong></td>
       <td><span class="badge badge--${u.role === "admin" ? "win" : "settled"}">${u.role}</span></td>
@@ -551,11 +582,113 @@ async function loadUsers(search = "") {
       <td class="num">${fmtNum(u.vote_points)}</td>
       <td>${fmtTime(u.created_at)}</td>
       <td>
-        <button class="btn-link" data-action="edit-balance" data-user-id="${u.id}" data-balance="${u.balance_points}">Sửa số dư</button>
+        ${bankCell}<br>
+        <button class="btn-link" data-action="adjust-balance" data-user-id="${u.id}" data-username="${esc(u.username)}" data-balance="${u.balance_points}" data-mode="add">+ Cộng</button>
+        <button class="btn-link" data-action="adjust-balance" data-user-id="${u.id}" data-username="${esc(u.username)}" data-balance="${u.balance_points}" data-mode="sub">− Trừ</button>
+        <button class="btn-link" data-action="edit-bank" data-user-id="${u.id}" data-username="${esc(u.username)}">${b ? "Sửa bank" : "Thêm bank"}</button>
         <button class="btn-link" data-action="toggle-role" data-user-id="${u.id}" data-role="${u.role}">${u.role === "admin" ? "Bỏ admin" : "Set admin"}</button>
       </td>
     </tr>
-  `).join("");
+  `;
+  }).join("");
+}
+
+// ===== Adjust balance (+/-) =====
+let adjustState = { userId: null, mode: "add" };
+
+function openAdjustBalance(userId, username, currentBalance, mode = "add") {
+  adjustState = { userId, mode };
+  const modal = document.querySelector('[data-modal="adjust-balance"]');
+  modal.querySelector("[data-adjust-user]").textContent = `User: ${username}`;
+  modal.querySelector("[data-adjust-current]").textContent = fmtNum(currentBalance) + " điểm";
+  // Set initial mode toggle
+  modal.querySelectorAll("[data-adjust-mode]").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.dataset.adjustMode === mode);
+    btn.onclick = () => {
+      adjustState.mode = btn.dataset.adjustMode;
+      modal.querySelectorAll("[data-adjust-mode]").forEach((b) =>
+        b.classList.toggle("is-active", b === btn)
+      );
+    };
+  });
+  const f = modal.querySelector("form");
+  f.amount.value = "";
+  f.note.value = "";
+  modal.showModal();
+  setTimeout(() => f.amount.focus(), 50);
+}
+
+async function submitAdjustBalance() {
+  const modal = document.querySelector('[data-modal="adjust-balance"]');
+  const f = modal.querySelector("form");
+  const amount = Math.abs(parseInt(f.amount.value, 10));
+  const note = f.note.value.trim();
+  if (!Number.isFinite(amount) || amount <= 0) {
+    toast("Số điểm phải > 0", "error"); return;
+  }
+  const delta = adjustState.mode === "add" ? amount : -amount;
+  const word = adjustState.mode === "add" ? "cộng" : "trừ";
+  if (!confirm(`${word.toUpperCase()} ${fmtNum(amount)} điểm cho user?`)) return;
+
+  const { data, error } = await sb.rpc("adjust_balance", {
+    p_user_id: adjustState.userId,
+    p_delta: delta,
+    p_note: note || null,
+  });
+  if (error) { toast(error.message, "error"); return; }
+  toast(`Đã ${word} ${fmtNum(amount)} điểm · số dư mới: ${fmtNum(data.new_balance)}`, "success");
+  modal.close();
+  loadUsers(document.querySelector("[data-user-search]").value.trim());
+}
+
+// ===== Bank edit for users (admin) =====
+let editBankUserId = null;
+async function openBankEdit(userId, username) {
+  editBankUserId = userId;
+  const modal = document.querySelector('[data-modal="edit-bank"]');
+  document.querySelector("[data-bank-user-label]").textContent = `User: ${username}`;
+  const f = modal.querySelector("form");
+  // Pre-fill if exists
+  const { data: banks } = await sb.from("bank_accounts")
+    .select("*").eq("user_id", userId).limit(1);
+  const b = banks?.[0];
+  f.bank_name.value = b?.bank_name || "";
+  f.account_number.value = b?.account_number || "";
+  f.account_holder.value = b?.account_holder || "";
+  modal.dataset.exists = b ? "1" : "0";
+  modal.showModal();
+}
+
+async function submitBankEdit() {
+  const modal = document.querySelector('[data-modal="edit-bank"]');
+  const f = modal.querySelector("form");
+  const payload = {
+    user_id: editBankUserId,
+    bank_name: f.bank_name.value.trim(),
+    account_number: f.account_number.value.trim(),
+    account_holder: f.account_holder.value.trim().toUpperCase(),
+    is_primary: true,
+  };
+  if (!payload.bank_name || !payload.account_number || !payload.account_holder) {
+    toast("Điền đủ thông tin", "error"); return;
+  }
+  const exists = modal.dataset.exists === "1";
+  const { error } = exists
+    ? await sb.from("bank_accounts").update(payload).eq("user_id", editBankUserId)
+    : await sb.from("bank_accounts").insert(payload);
+  if (error) { toast(error.message, "error"); return; }
+  toast("Đã lưu bank", "success");
+  modal.close();
+  loadUsers(document.querySelector("[data-user-search]").value.trim());
+}
+
+async function deleteBankForUser() {
+  if (!confirm("Xóa bank của user này?")) return;
+  const { error } = await sb.from("bank_accounts").delete().eq("user_id", editBankUserId);
+  if (error) { toast(error.message, "error"); return; }
+  toast("Đã xóa bank", "success");
+  document.querySelector('[data-modal="edit-bank"]').close();
+  loadUsers(document.querySelector("[data-user-search]").value.trim());
 }
 
 async function editBalance(userId, oldBalance) {

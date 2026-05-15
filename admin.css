@@ -462,3 +462,225 @@ a { color: inherit; }
 .notif-item h4 { margin: 0 0 6px; color: var(--accent, #d59a43); font-size: 15px; }
 .notif-item p { margin: 0 0 6px; line-height: 1.5; font-size: 14px; }
 .notif-item time { color: var(--muted, #8a93a3); font-size: 12px; }
+
+/* ===== Adjust balance toggle ===== */
+.adjust-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 10px 0;
+}
+.adjust-toggle button {
+  padding: 10px;
+  border: 1px solid var(--border, #2a2f3a);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted, #8a93a3);
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 14px;
+}
+.adjust-toggle button.is-active[data-adjust-mode="add"] {
+  background: rgba(24, 194, 105, 0.15);
+  border-color: #18c269;
+  color: #18c269;
+}
+.adjust-toggle button.is-active[data-adjust-mode="sub"] {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* =====================================================================
+ * MOBILE RESPONSIVE (≤ 768px)
+ * ===================================================================== */
+@media (max-width: 768px) {
+  body { font-size: 13px; }
+
+  /* Header: 2 hàng - brand + user trên, tabs scroll dưới */
+  .admin-header {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .admin-brand strong { font-size: 16px; }
+  .admin-brand span { font-size: 10px; letter-spacing: 1.5px; }
+
+  .admin-tabs {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+  }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .admin-user {
+    margin-left: auto;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .admin-user [data-admin-name] {
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .logout-btn { padding: 5px 10px; font-size: 12px; }
+
+  /* Main */
+  .admin-main { padding: 14px 10px; }
+
+  .panel-head {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .panel-head h1 { font-size: 18px; }
+
+  .btn-primary, .btn-danger {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  /* Filter chips */
+  .filter-chips {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .chip { flex: 0 0 auto; }
+
+  /* Cards */
+  .card {
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .card h2 { font-size: 14px; }
+  .card-head {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .auto-refresh { font-size: 12px; }
+
+  /* Round cards grid → 1 col on mobile */
+  .rounds-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .round-card {
+    padding: 12px;
+  }
+  .round-card .title h3 { font-size: 14px; }
+  .round-actions { flex-wrap: wrap; }
+
+  /* Tables: scroll horizontal, tighter cells */
+  .bets-table-wrap {
+    margin: 0 -14px -14px;
+  }
+  .bets-table {
+    min-width: 540px;
+  }
+  .bets-table th,
+  .bets-table td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .btn-link {
+    padding: 4px 8px;
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+
+  /* Choice distribution */
+  .choice-row {
+    padding: 10px 12px;
+  }
+  .choice-name { font-size: 16px; }
+  .choice-foot {
+    gap: 8px;
+    font-size: 12px;
+  }
+  .btn-quick-settle {
+    margin-left: 0;
+    margin-top: 4px;
+    width: 100%;
+    padding: 8px;
+  }
+
+  /* Settle bar */
+  .settle-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .settle-bar label {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+  .settle-bar input {
+    max-width: none;
+  }
+
+  /* Stat grid → 2 cols on mobile */
+  .stat-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .stat-card { padding: 14px; }
+  .stat-card strong { font-size: 22px; }
+
+  /* Modal fills more space on mobile */
+  .modal {
+    min-width: 0;
+    width: calc(100vw - 24px);
+    max-width: 420px;
+    padding: 18px;
+    margin: 12px auto;
+  }
+  .modal h3 { font-size: 16px; }
+  .modal-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .modal-actions button {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  /* Admin login on mobile */
+  .admin-login-card {
+    padding: 24px 20px 18px;
+  }
+  .admin-login-card h1 { font-size: 20px; }
+
+  /* Toast */
+  .admin-toast {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    max-width: none;
+  }
+}
+
+/* Extra tight: <= 380px */
+@media (max-width: 380px) {
+  .admin-brand span { display: none; }
+  .tab { padding: 7px 10px; font-size: 12px; }
+  .bets-table th, .bets-table td { padding: 7px 8px; }
+  .stat-card strong { font-size: 19px; }
+}

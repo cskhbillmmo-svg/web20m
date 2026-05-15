@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hồ sơ rút tiền</title>
+    <link rel="stylesheet" href="./profile.css" />
+  </head>
+  <body>
+    <main class="app-screen">
+      <section class="record-page">
+        <header class="record-header">
+          <a class="header-back" href="./profile.html" aria-label="Quay lại"></a>
+          <h1>Hồ sơ rút tiền</h1>
+        </header>
+
+        <div class="record-list" data-list>
+          <p class="record-empty" data-loading>Đang tải…</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script>
+      (async function () {
+        const list = document.querySelector("[data-list]");
+        if (!window.sb) { list.innerHTML = '<p class="record-empty">Supabase chưa cấu hình</p>'; return; }
+
+        const { data: { user } } = await window.sb.auth.getUser();
+        if (!user) { window.location.href = "./index.html"; return; }
+
+        const { data, error } = await window.sb.from("transactions")
+          .select("id, amount, status, note, created_at, updated_at")
+          .eq("user_id", user.id)
+          .eq("type", "withdraw")
+          .order("created_at", { ascending: false });
+
+        if (error) { list.innerHTML = `<p class="record-empty">${esc(error.message)}</p>`; return; }
+        if (!data?.length) { list.innerHTML = '<p class="record-empty">Dữ liệu trống</p>'; return; }
+
+        const STATUS = {
+          pending:   "Chờ duyệt",
+          success:   "Đã thành công",
+          failed:    "Đánh giá trở lại",
+          cancelled: "Đã hủy",
+        };
+
+        const fmtK = (points) => {
+          const k = (Number(points || 0) / 1000).toFixed(2);
+          return `-${k}K`;
+        };
+
+        const fmtTime = (iso) => {
+          if (!iso) return "—";
+          const d = new Date(iso);
+          const pad = (n) => String(n).padStart(2, "0");
+          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        };
+
+        list.innerHTML = data.map((t) => `
+          <article class="record-item record-item--${t.status}">
+            <div class="record-item__top">
+              <span class="record-status">${STATUS[t.status] || t.status}</span>
+              <strong class="record-amount">Số tiền: ${fmtK(t.amount)}</strong>
+            </div>
+            <p class="record-line">Minh họa: ${esc(t.note || "—")}</p>
+            <p class="record-line">Thời gian thực hiện: ${fmtTime(t.created_at)}</p>
+            <p class="record-line">Trạng thái: ${fmtTime(t.updated_at || t.created_at)}</p>
+          </article>
+        `).join("");
+
+        function esc(s) {
+          return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+          }[c]));
+        }
+      })();
+    </script>
+  </body>
+</html>

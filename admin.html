@@ -240,6 +240,51 @@
       </section>
     </main>
 
+    <!-- Adjust balance modal -->
+    <dialog class="modal" data-modal="adjust-balance">
+      <form method="dialog">
+        <h3>Điều chỉnh điểm</h3>
+        <p class="muted" data-adjust-user>—</p>
+        <p>Số dư hiện tại: <strong data-adjust-current>—</strong></p>
+        <div class="adjust-toggle">
+          <button type="button" data-adjust-mode="add" class="is-active">+ Cộng</button>
+          <button type="button" data-adjust-mode="sub">− Trừ</button>
+        </div>
+        <label>Số điểm
+          <input name="amount" type="number" min="1" step="1" placeholder="VD: 100000" required />
+        </label>
+        <label>Ghi chú (tùy chọn)
+          <input name="note" placeholder="VD: thưởng VOTE, phạt vi phạm…" />
+        </label>
+        <div class="modal-actions">
+          <button type="button" data-action="close-modal">Hủy</button>
+          <button class="btn-primary" type="button" data-action="submit-adjust">Xác nhận</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Bank edit modal -->
+    <dialog class="modal" data-modal="edit-bank">
+      <form method="dialog">
+        <h3>Tài khoản ngân hàng</h3>
+        <p class="muted" data-bank-user-label>—</p>
+        <label>Tên ngân hàng
+          <input name="bank_name" required />
+        </label>
+        <label>Số tài khoản
+          <input name="account_number" required />
+        </label>
+        <label>Chủ tài khoản
+          <input name="account_holder" required />
+        </label>
+        <div class="modal-actions">
+          <button type="button" data-action="close-modal">Hủy</button>
+          <button type="button" data-action="delete-bank" class="btn-danger">Xóa bank</button>
+          <button class="btn-primary" type="button" data-action="submit-edit-bank">Lưu</button>
+        </div>
+      </form>
+    </dialog>
+
     <!-- Create-round modal -->
     <dialog class="modal" data-modal="create-round">
       <form method="dialog">

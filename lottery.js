@@ -109,15 +109,24 @@ amountInput.addEventListener("input", () => {
 });
 
 confirmButton.addEventListener("click", async () => {
-  if (!selected.length) { showToast("Vui lòng chọn cụm từ"); return; }
-  const amountK = Number(amountInput.value || 0);
-  if (!amountK) { showToast("Vui lòng nhập số điểm"); return; }
   if (!openRound) { showToast("Không có round đang mở"); return; }
 
+  // Validation order chuẩn cutoraclb (reservation.*)
+  const moneyStr = amountInput.value.trim();
+  // 1. money === "0" → "Số tiền sai"
+  if (moneyStr === "0") { showToast("Số tiền sai"); return; }
+  // 2. formData.length === 0 → "Vui lòng chọn"
+  if (!selected.length) { showToast("Vui lòng chọn"); return; }
+  // 3. money === "" → "Vui lòng nhập số tiền"
+  if (moneyStr === "") { showToast("Vui lòng nhập số tiền"); return; }
+
+  const amountK = Number(moneyStr);
   const amountPoints = amountK * 1000;
   const totalNeeded = amountPoints * selected.length;
+
+  // 4. balance < total → "Số dư không đủ, vui lòng liên hệ CSKH để nạp thêm!"
   if (totalNeeded > userBalance) {
-    showToast(`Số dư không đủ (cần ${totalNeeded.toLocaleString("vi-VN")})`);
+    showToast("Số dư không đủ, vui lòng liên hệ CSKH để nạp thêm!");
     return;
   }
 
@@ -136,15 +145,16 @@ confirmButton.addEventListener("click", async () => {
   confirmButton.disabled = false;
 
   if (lastError) {
-    showToast("Lỗi đặt cược: " + lastError.message);
-    await refetchBalance(); // sync balance in case some bets went through
-  } else {
-    showToast(`Đã đặt ${placedCount} cược · -${(totalNeeded/1000).toLocaleString("vi-VN")}K`);
+    showToast("Lỗi: " + lastError.message);
     await refetchBalance();
+  } else {
+    showToast(`Đã đặt cược ${placedCount} lần · ${(totalNeeded/1000).toLocaleString("vi-VN")}K`);
+    // allClear() — reset form như cutoraclb
     selected = [];
     optionButtons.forEach((b) => b.classList.remove("is-selected"));
     selectedText.textContent = "Không được chọn";
     amountInput.value = "";
     updateTotals();
+    await refetchBalance();
   }
 });
