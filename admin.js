@@ -223,8 +223,16 @@ function init() {
     else if (a === "open-create-invite") openCreateInvite();
     else if (a === "submit-create-invite") submitCreateInvite();
     else if (a === "copy-invite") copyInviteCode(t.dataset.inviteCode);
-    else if (a === "approve-tx") doApproveTx(Number(t.dataset.txId), true);
-    else if (a === "reject-tx") doApproveTx(Number(t.dataset.txId), false);
+    else if (a === "approve-tx") {
+      const txId = Number(t.dataset.txId);
+      if (document.querySelector(".tab.is-active")?.dataset.tab === "withdraws") doApproveWithdraw(txId, true);
+      else doApproveTx(txId, true);
+    }
+    else if (a === "reject-tx") {
+      const txId = Number(t.dataset.txId);
+      if (document.querySelector(".tab.is-active")?.dataset.tab === "withdraws") doApproveWithdraw(txId, false);
+      else doApproveTx(txId, false);
+    }
     else if (a === "user-history") openUserHistory(t.dataset.userId, t.dataset.username);
     else if (a === "user-withdraws") openUserWithdraws(t.dataset.userId, t.dataset.username);
     else if (a === "toggle-freeze") toggleFreeze(t.dataset.userId, t.dataset.username, t.dataset.frozen === "1");
@@ -717,10 +725,13 @@ async function loadUsers(search = "") {
   // Fetch banks separately (1 query)
   const userIds = data.map((u) => u.id);
   const { data: banks } = await sb.from("bank_accounts")
-    .select("user_id, bank_name, account_number, account_holder")
-    .in("user_id", userIds);
+    .select("id, user_id, bank_name, account_number, account_holder, created_at")
+    .in("user_id", userIds)
+    .order("created_at", { ascending: false });
   const bankByUser = {};
-  (banks || []).forEach((b) => (bankByUser[b.user_id] = b));
+  (banks || []).forEach((b) => {
+    if (!bankByUser[b.user_id]) bankByUser[b.user_id] = b;
+  });
 
   tbody.innerHTML = data.map((u) => {
     const b = bankByUser[u.id];
@@ -887,12 +898,28 @@ async function submitAdjustBalance() {
   const word = adjustState.mode === "add" ? "cộng" : "trừ";
   if (!(await adminConfirm(`${word.toUpperCase()} ${fmtNum(amount)} điểm cho user?`, { title: "Điều chỉnh điểm", okText: word === "cộng" ? "Cộng" : "Trừ" }))) return;
 
-  const { data, error } = await sb.rpc("adjust_balance", {
+  const payload = {
     p_user_id: adjustState.userId,
     p_delta: delta,
     p_note: note || null,
-  });
-  if (error) { toast(error.message, "error"); return; }
+  };
+  let { data, error } = await sb.rpc("adjust_balance", payload);
+  if (error?.message?.toLowerCase?.().includes("forbidden")) {
+    await sb.auth.refreshSession();
+    ({ data, error } = await sb.rpc("adjust_balance", payload));
+  }
+  if (error) {
+    if (error.message?.toLowerCase?.().includes("forbidden")) {
+      const { data: { user } } = await sb.auth.getUser();
+      const { data: p } = user
+        ? await sb.from("profiles").select("username, role").eq("id", user.id).maybeSingle()
+        : { data: null };
+      toast(`Current account is not accepted as admin (${p?.username || "not signed in"} / ${p?.role || "no-role"}). Logout, then login again with admin2026.`, "error");
+      return;
+    }
+    toast(error.message, "error");
+    return;
+  }
   toast(`Đã ${word} ${fmtNum(amount)} điểm · số dư mới: ${fmtNum(data.new_balance)}`, "success");
   modal.close();
   loadUsers(document.querySelector("[data-user-search]").value.trim());
@@ -1022,9 +1049,13 @@ async function loadWithdraws() {
   (profs || []).forEach((p) => (userMap[p.id] = p.username));
   data.forEach((t) => (t.profiles = { username: userMap[t.user_id] }));
   const { data: banks } = await sb.from("bank_accounts")
-    .select("user_id, bank_name, account_number, account_holder").in("user_id", userIds);
+    .select("id, user_id, bank_name, account_number, account_holder, created_at")
+    .in("user_id", userIds)
+    .order("created_at", { ascending: false });
   const bankByUser = {};
-  (banks || []).forEach((b) => (bankByUser[b.user_id] = b));
+  (banks || []).forEach((b) => {
+    if (!bankByUser[b.user_id]) bankByUser[b.user_id] = b;
+  });
 
   const statusBadge = {
     pending: { label: "Chờ duyệt", color: "#f59e0b" },
@@ -1074,7 +1105,11 @@ async function doApproveWithdraw(txId, approve) {
       tx.profiles = { username: p?.username };
     }
     if (!tx) { toast("Không tìm thấy giao dịch", "error"); return; }
-    const { data: banks } = await sb.from("bank_accounts").select("*").eq("user_id", tx.user_id).limit(1);
+    const { data: banks } = await sb.from("bank_accounts")
+      .select("*")
+      .eq("user_id", tx.user_id)
+      .order("created_at", { ascending: false })
+      .limit(1);
     const bank = banks?.[0];
     if (!bank) { toast("User chưa liên kết bank — không duyệt được", "error"); return; }
     const k = Math.floor(tx.amount / 1000);
@@ -1179,7 +1214,10 @@ async function openBankEdit(userId, username) {
   const f = modal.querySelector("form");
   // Pre-fill if exists
   const { data: banks } = await sb.from("bank_accounts")
-    .select("*").eq("user_id", userId).limit(1);
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1);
   const b = banks?.[0];
   f.bank_name.value = b?.bank_name || "";
   f.account_number.value = b?.account_number || "";
@@ -1192,7 +1230,6 @@ async function submitBankEdit() {
   const modal = document.querySelector('[data-modal="edit-bank"]');
   const f = modal.querySelector("form");
   const payload = {
-    user_id: editBankUserId,
     bank_name: f.bank_name.value.trim(),
     account_number: f.account_number.value.trim(),
     account_holder: f.account_holder.value.trim().toUpperCase(),
@@ -1201,11 +1238,24 @@ async function submitBankEdit() {
   if (!payload.bank_name || !payload.account_number || !payload.account_holder) {
     toast("Điền đủ thông tin", "error"); return;
   }
-  const exists = modal.dataset.exists === "1";
-  const { error } = exists
-    ? await sb.from("bank_accounts").update(payload).eq("user_id", editBankUserId)
-    : await sb.from("bank_accounts").insert(payload);
+  let { data: savedRows, error } = await sb.from("bank_accounts")
+    .update(payload)
+    .eq("user_id", editBankUserId)
+    .select("id");
+  if (!error && !savedRows?.length) {
+    const inserted = await sb.from("bank_accounts")
+      .insert({ ...payload, user_id: editBankUserId })
+      .select("id");
+    savedRows = inserted.data;
+    error = inserted.error;
+  }
   if (error) { toast(error.message, "error"); return; }
+  if (savedRows?.length > 1) {
+    await sb.from("bank_accounts")
+      .delete()
+      .eq("user_id", editBankUserId)
+      .neq("id", savedRows[0].id);
+  }
   toast("Đã lưu bank", "success");
   modal.close();
   loadUsers(document.querySelector("[data-user-search]").value.trim());

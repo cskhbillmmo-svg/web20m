@@ -46,7 +46,7 @@
         if (!user) return;
         const [{ data: p }, { data: banks }] = await Promise.all([
           window.sb.from("profiles").select("real_name,gender,username").eq("id", user.id).maybeSingle(),
-          window.sb.from("bank_accounts").select("bank_name").eq("user_id", user.id).limit(1),
+          window.sb.from("bank_accounts").select("bank_name").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
         ]);
         const $ = (k) => document.querySelector(`[data-field="${k}"]`);
         const genderMap = { male: "Nam", female: "Nữ", other: "Khác", unknown: "Không xác định" };
