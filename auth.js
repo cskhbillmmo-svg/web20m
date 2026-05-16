@@ -1,7 +1,7 @@
 const sb = window.sb;
 
 function syntheticEmail(username) {
-  return `${username.trim().toLowerCase()}@kinglove69.com`;
+  return `${username.trim().toLowerCase()}@onenight.com`;
 }
 
 function toast(message) {
@@ -70,6 +70,10 @@ if (registerForm) {
       toast("Vui lòng điền đủ thông tin");
       return;
     }
+    if (!inviteCode) {
+      toast("Mã mời là bắt buộc");
+      return;
+    }
     if (password.length < 6) {
       toast("Mật khẩu phải có ít nhất 6 ký tự");
       return;
@@ -79,11 +83,25 @@ if (registerForm) {
       return;
     }
 
+    const { data: validCode, error: codeError } = await sb.from("invite_codes")
+      .select("code")
+      .eq("code", inviteCode)
+      .eq("status", "active")
+      .maybeSingle();
+    if (codeError) {
+      toast("Kiểm tra mã mời thất bại: " + codeError.message);
+      return;
+    }
+    if (!validCode) {
+      toast("Mã mời không hợp lệ hoặc đã bị vô hiệu hóa");
+      return;
+    }
+
     const { error } = await sb.auth.signUp({
       email: syntheticEmail(username),
       password,
       options: {
-        data: { username, invite_code: inviteCode || null },
+        data: { username, invite_code: inviteCode },
       },
     });
     if (error) {

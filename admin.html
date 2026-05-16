@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin · Kinglove69</title>
+    <title>Admin · Onenight</title>
     <link rel="stylesheet" href="./admin.css" />
   </head>
   <body>
     <header class="admin-header">
       <div class="admin-brand">
-        <strong>Kinglove69</strong>
+        <strong>Onenight</strong>
         <span>Admin</span>
       </div>
       <nav class="admin-tabs" role="tablist">
@@ -124,8 +124,9 @@
       <section class="tab-panel" data-panel="users" hidden>
         <div class="panel-head">
           <h1>Người dùng</h1>
-          <input class="search-input" type="search" placeholder="Tìm username…" data-user-search />
+          <button class="btn-primary" type="button" data-action="open-create-invite">+ Tạo mã giới thiệu</button>
         </div>
+        <input class="search-input" type="search" placeholder="Tìm username…" data-user-search />
         <section class="card">
           <div class="bets-table-wrap">
             <table class="bets-table">
@@ -141,6 +142,29 @@
               </thead>
               <tbody data-users-body>
                 <tr><td colspan="6" class="muted">Đang tải…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>Mã giới thiệu</h2>
+            <span class="muted">User chỉ có thể đăng ký khi nhập mã do admin phát hành.</span>
+          </div>
+          <div class="bets-table-wrap">
+            <table class="bets-table">
+              <thead>
+                <tr>
+                  <th>Mã</th>
+                  <th>Trạng thái</th>
+                  <th>Người tạo</th>
+                  <th>Tạo lúc</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody data-invite-codes-body>
+                <tr><td colspan="5" class="muted">Đang tải…</td></tr>
               </tbody>
             </table>
           </div>
@@ -260,6 +284,20 @@
         <div class="modal-actions">
           <button type="button" data-action="close-modal">Hủy</button>
           <button class="btn-primary" type="button" data-action="submit-create-round">Tạo</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Create-invite modal -->
+    <dialog class="modal" data-modal="create-invite">
+      <form method="dialog">
+        <h3>Tạo mã giới thiệu</h3>
+        <label>Mã giới thiệu
+          <input name="code" placeholder="VD: KLG12345" required />
+        </label>
+        <div class="modal-actions">
+          <button type="button" data-action="close-modal">Hủy</button>
+          <button class="btn-primary" type="button" data-action="submit-create-invite">Tạo mã</button>
         </div>
       </form>
     </dialog>

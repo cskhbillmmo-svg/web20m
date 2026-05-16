@@ -405,7 +405,7 @@ button.nav-logo {
 }
 
 .king-logo::before {
-  content: "Kinglove";
+  content: "Onenight";
   font-family: Georgia, "Times New Roman", serif;
   font-size: 13px;
   font-style: italic;
@@ -1302,7 +1302,7 @@ button.nav-logo {
 .withdraw-item--pending .withdraw-status { color: #f59e0b; }
 .withdraw-item--success .withdraw-status { color: #e23a48; }
 .withdraw-item--failed  .withdraw-status { color: #71757d; }
-.withdraw-item--cancelled .withdraw-status { color: #71757d; }
+.withdraw-item--cancelled .withdraw-status { color: #ef4444; }
 
 .withdraw-amount {
   color: #111722;
@@ -1403,7 +1403,7 @@ button.nav-logo {
 .record-item--pending   .record-status { color: #f59e0b; }
 .record-item--success   .record-status { color: #18c269; }
 .record-item--failed    .record-status { color: #e23a48; }
-.record-item--cancelled .record-status { color: #71757d; }
+.record-item--cancelled .record-status { color: #ef4444; }
 
 .record-amount {
   color: #e23a48;
@@ -1413,7 +1413,7 @@ button.nav-logo {
 
 .record-item--success .record-amount { color: #18c269; }
 .record-item--pending .record-amount { color: #f59e0b; }
-.record-item--cancelled .record-amount { color: #71757d; }
+.record-item--cancelled .record-amount { color: #ef4444; }
 
 .record-line {
   margin: 2px 0;

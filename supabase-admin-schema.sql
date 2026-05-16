@@ -1,5 +1,5 @@
 -- =====================================================================
--- Kinglove69 — Admin & Vote schema (run after supabase-schema.sql)
+-- Onenight — Admin & Vote schema (run after supabase-schema.sql)
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -19,6 +19,25 @@ set search_path = public
 as $$
   select coalesce((select role = 'admin' from public.profiles where id = uid), false);
 $$;
+
+-- ---------------------------------------------------------------------
+-- 1b. INVITE CODES (admin-issued referral codes for registration)
+-- ---------------------------------------------------------------------
+create table if not exists public.invite_codes (
+  code text primary key,
+  created_by uuid references auth.users(id) on delete set null,
+  status text not null default 'active' check (status in ('active','disabled')),
+  created_at timestamptz not null default now()
+);
+
+alter table public.invite_codes enable row level security;
+drop policy if exists "invite_codes select active" on public.invite_codes;
+create policy "invite_codes select active" on public.invite_codes
+  for select using (status = 'active');
+drop policy if exists "invite_codes admin all" on public.invite_codes;
+create policy "invite_codes admin all" on public.invite_codes
+  for all using (public.is_admin(auth.uid()))
+  with check (public.is_admin(auth.uid()));
 
 -- Allow admin to read all profiles
 drop policy if exists "profiles admin read all" on public.profiles;
@@ -233,6 +252,7 @@ create unique index if not exists bank_accounts_one_per_user
 drop policy if exists "bank own all" on public.bank_accounts;
 drop policy if exists "bank read own" on public.bank_accounts;
 drop policy if exists "bank insert own" on public.bank_accounts;
+drop policy if exists "bank insert own once" on public.bank_accounts;
 
 create policy "bank read own" on public.bank_accounts
   for select using (auth.uid() = user_id);

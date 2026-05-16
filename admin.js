@@ -93,8 +93,7 @@ function showAdminLogin(errorMsg = "") {
     <div class="admin-login-shell">
       <div class="admin-login-card">
         <div class="admin-login-brand">
-          <span class="brand-word">Kinglove</span>
-          <span class="brand-num">69</span>
+          <span class="brand-word">Onenight</span>
         </div>
         <h1>Admin Login</h1>
         ${errorMsg ? `<p class="admin-login-error">${errorMsg}</p>` : ""}
@@ -123,7 +122,7 @@ function showAdminLogin(errorMsg = "") {
     btn.textContent = "Đang đăng nhập…";
 
     await sb.auth.signOut();
-    const email = `${username.toLowerCase()}@kinglove69.com`;
+    const email = `${username.toLowerCase()}@onenight.com`;
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
     if (error) {
@@ -168,7 +167,10 @@ function init() {
         p.hidden = p.dataset.panel !== tab.dataset.tab;
         p.classList.toggle("is-active", p.dataset.panel === tab.dataset.tab);
       });
-      if (tab.dataset.tab === "users") loadUsers();
+      if (tab.dataset.tab === "users") {
+        loadUsers();
+        loadInviteCodes();
+      }
       if (tab.dataset.tab === "dashboard") loadDashboard();
       if (tab.dataset.tab === "notifications") loadNotifications();
       if (tab.dataset.tab === "transactions") loadTransactions();
@@ -218,6 +220,9 @@ function init() {
     else if (a === "adjust-balance") openAdjustBalance(t.dataset.userId, t.dataset.username, t.dataset.balance, t.dataset.mode);
     else if (a === "submit-adjust") submitAdjustBalance();
     else if (a === "send-notification") sendNotification();
+    else if (a === "open-create-invite") openCreateInvite();
+    else if (a === "submit-create-invite") submitCreateInvite();
+    else if (a === "copy-invite") copyInviteCode(t.dataset.inviteCode);
     else if (a === "approve-tx") doApproveTx(Number(t.dataset.txId), true);
     else if (a === "reject-tx") doApproveTx(Number(t.dataset.txId), false);
     else if (a === "user-history") openUserHistory(t.dataset.userId, t.dataset.username);
@@ -770,6 +775,81 @@ async function loadUsers(search = "") {
   }).join("");
 }
 
+function generateInviteCode() {
+  return `KLG${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+}
+
+async function loadInviteCodes() {
+  const tbody = document.querySelector("[data-invite-codes-body]");
+  if (!tbody) return;
+  const { data, error } = await sb.from("invite_codes")
+    .select("code, status, created_at, created_by")
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="5" class="muted">${esc(error.message)}</td></tr>`;
+    return;
+  }
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="muted">Chưa có mã giới thiệu</td></tr>';
+    return;
+  }
+  const creatorIds = [...new Set(data.map((item) => item.created_by).filter(Boolean))];
+  const creatorMap = {};
+  if (creatorIds.length) {
+    const { data: profiles } = await sb.from("profiles")
+      .select("id, username")
+      .in("id", creatorIds);
+    (profiles || []).forEach((profile) => {
+      creatorMap[profile.id] = profile.username;
+    });
+  }
+  data.forEach((item) => {
+    item.profiles = { username: creatorMap[item.created_by] || "-" };
+  });
+  const statusLabel = {
+    active: "Hoạt động",
+    disabled: "Vô hiệu",
+  };
+  tbody.innerHTML = data.map((item) => `
+    <tr>
+      <td><strong>${esc(item.code)}</strong></td>
+      <td><span class="badge badge--${item.status === "active" ? "win" : "cancelled"}">${esc(statusLabel[item.status] || item.status)}</span></td>
+      <td>${esc(item.profiles?.username || "—")}</td>
+      <td>${fmtTime(item.created_at)}</td>
+      <td><button class="btn-link" type="button" data-action="copy-invite" data-invite-code="${esc(item.code)}">Sao chép</button></td>
+    </tr>
+  `).join("");
+}
+
+function openCreateInvite() {
+  const modal = document.querySelector('[data-modal="create-invite"]');
+  const input = modal.querySelector('[name="code"]');
+  input.value = generateInviteCode();
+  modal.showModal();
+  setTimeout(() => input.select(), 50);
+}
+
+async function copyInviteCode(inviteCode) {
+  try {
+    await navigator.clipboard.writeText(inviteCode);
+    toast("Đã sao chép mã giới thiệu vào clipboard", "success");
+  } catch (err) {
+    toast("Không thể sao chép mã", "error");
+  }
+}
+
+async function submitCreateInvite() {
+  const modal = document.querySelector('[data-modal="create-invite"]');
+  const code = modal.querySelector('[name="code"]').value.trim().toUpperCase();
+  if (!code) { toast("Nhập mã giới thiệu", "error"); return; }
+  const { error } = await sb.from("invite_codes").insert({ code, created_by: currentUser.id, status: "active" });
+  if (error) { toast(error.message, "error"); return; }
+  toast("Đã tạo mã giới thiệu", "success");
+  modal.close();
+  loadInviteCodes();
+}
+
 // ===== Adjust balance (+/-) =====
 let adjustState = { userId: null, mode: "add" };
 
@@ -970,11 +1050,11 @@ async function loadWithdraws() {
         <td>${fmtTime(t.created_at)}</td>
         <td>
           ${t.status === "pending" ? `
-            <button class="act act--add" data-action="approve-withdraw" data-w-id="${t.id}" ${!b ? 'disabled title="Chưa có bank — không duyệt được"' : ''}>
+            <button type="button" class="act act--add" data-action="approve-tx" data-tx-id="${t.id}" ${!b ? 'disabled title="Chưa có bank — không duyệt được"' : ''}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
               <span>Duyệt</span>
             </button>
-            <button class="act act--freeze" data-action="reject-withdraw" data-w-id="${t.id}">
+            <button type="button" class="act act--freeze" data-action="reject-tx" data-tx-id="${t.id}">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               <span>Từ chối</span>
             </button>

@@ -1,5 +1,5 @@
 -- =====================================================================
--- Kinglove69 — Admin role + VOTE game schema (matches admin.js)
+-- Onenight — Admin role + VOTE game schema (matches admin.js)
 -- Run in Supabase SQL Editor AFTER supabase-schema.sql.
 -- Idempotent — safe to re-run.
 -- =====================================================================
