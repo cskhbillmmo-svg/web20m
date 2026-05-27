@@ -1,4 +1,4 @@
-﻿const currency = new Intl.NumberFormat("vi-VN");
+const currency = new Intl.NumberFormat("vi-VN");
 
 const toastEl = document.querySelector(".toast:not(.toast--center)");
 let toastTimer = 0;
@@ -73,7 +73,7 @@ document.addEventListener("keydown", (e) => {
 
 const balanceEl = document.querySelector("[data-balance]");
 let currentBalance = Number(balanceEl?.textContent || 0);
-// Hiá»ƒn thá»‹ balance theo K (1K = 1000 points/VND) + thousand separator
+// Hiển thị balance theo K (1K = 1000 points/VND) + thousand separator
 function setBalance(pointsValue) {
   currentBalance = pointsValue;
   const k = Math.floor((Number(pointsValue) || 0) / 1000);
@@ -85,37 +85,37 @@ const actions = {
 
   "change-language": () => {
     closeSettings();
-    showToast("Hiá»‡n chá»‰ há»— trá»£ Tiáº¿ng Viá»‡t");
+    showToast("Hiện chỉ hỗ trợ Tiếng Việt");
   },
 
   "share-invite": () => {
     closeSettings();
     const inviteCode = currentProfile?.invite_code
       || (currentProfile?.username ? `KLG-${currentProfile.username}` : "KINGLOVE69-1102");
-    const shareText = `Tham gia Kinglove69 cÃ¹ng tÃ´i! MÃ£ má»i: ${inviteCode}`;
+    const shareText = `Tham gia Kinglove69 cùng tôi! Mã mời: ${inviteCode}`;
     if (navigator.share) {
       navigator.share({ title: "Kinglove69", text: shareText }).catch(() => {});
     } else if (navigator.clipboard) {
       navigator.clipboard
         .writeText(shareText)
-        .then(() => showToast(`ÄÃ£ sao chÃ©p mÃ£ má»i: ${inviteCode}`))
-        .catch(() => showToast(`MÃ£ má»i: ${inviteCode}`));
+        .then(() => showToast(`Đã sao chép mã mời: ${inviteCode}`))
+        .catch(() => showToast(`Mã mời: ${inviteCode}`));
     } else {
-      showToast(`MÃ£ má»i: ${inviteCode}`);
+      showToast(`Mã mời: ${inviteCode}`);
     }
   },
 
   logout: async () => {
     closeSettings();
     const ok = window.userConfirm
-      ? await window.userConfirm("Báº¡n cÃ³ cháº¯c muá»‘n Ä‘Äƒng xuáº¥t?", { title: "ÄÄƒng xuáº¥t", okText: "ÄÄƒng xuáº¥t", danger: true })
-      : confirm("Báº¡n cÃ³ cháº¯c muá»‘n Ä‘Äƒng xuáº¥t?");
+      ? await window.userConfirm("Bạn có chắc muốn đăng xuất?", { title: "Đăng xuất", okText: "Đăng xuất", danger: true })
+      : confirm("Bạn có chắc muốn đăng xuất?");
     if (!ok) return;
     await window.sb?.auth.signOut();
     window.location.href = "./index.html";
   },
 
-  "online-support": () => showToast("Äang káº¿t ná»‘i CSKH trá»±c tuyáº¿nâ€¦"),
+  "online-support": () => showToast("Đang kết nối CSKH trực tuyến…"),
 
   "refresh-balance": async (btn) => {
     if (btn.classList.contains("is-spinning")) return;
@@ -124,19 +124,19 @@ const actions = {
     if (fresh) setBalance(fresh.balance_points || 0);
     window.setTimeout(() => {
       btn.classList.remove("is-spinning");
-      showToast(fresh ? "ÄÃ£ lÃ m má»›i sá»‘ dÆ°" : "KhÃ´ng thá»ƒ káº¿t ná»‘i server");
+      showToast(fresh ? "Đã làm mới số dư" : "Không thể kết nối server");
     }, 700);
   },
 
   "vote-history": () =>
-    showCenterToast("Lá»‹ch sá»­ Vote sá»‘ Ä‘iá»ƒm bÃ­ máº­t, há»™i viÃªn khÃ´ng Ä‘Æ°á»£c cáº­p nháº­t vÃ o."),
-  "bank-info": () => showToast("ThÃ´ng tin ngÃ¢n hÃ ng Ä‘ang Ä‘Æ°á»£c cáº­p nháº­t"),
-  "notifications": () => showToast("Báº¡n chÆ°a cÃ³ thÃ´ng bÃ¡o má»›i"),
-  "support": () => showToast("LiÃªn há»‡ há»— trá»£: support@cutora.vn"),
+    showCenterToast("Lịch sử Vote số điểm bí mật, hội viên không được cập nhật vào."),
+  "bank-info": () => showToast("Thông tin ngân hàng đang được cập nhật"),
+  "notifications": () => showToast("Bạn chưa có thông báo mới"),
+  "support": () => showToast("Liên hệ hỗ trợ: support@cutora.vn"),
 
-  "nav-home": () => showToast("Trang chá»§ Ä‘ang Ä‘Æ°á»£c phÃ¡t triá»ƒn"),
-  "nav-vote": () => showToast("Trang VOTE Ä‘ang Ä‘Æ°á»£c phÃ¡t triá»ƒn"),
-  "nav-cinema": () => showToast("Ráº¡p chiáº¿u Ä‘ang Ä‘Æ°á»£c phÃ¡t triá»ƒn"),
+  "nav-home": () => showToast("Trang chủ đang được phát triển"),
+  "nav-vote": () => showToast("Trang VOTE đang được phát triển"),
+  "nav-cinema": () => showToast("Rạp chiếu đang được phát triển"),
 };
 
 document.addEventListener("click", (e) => {

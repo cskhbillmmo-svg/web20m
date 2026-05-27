@@ -1,4 +1,4 @@
-﻿const sb = window.sb;
+const sb = window.sb;
 
 function syntheticEmail(username) {
   return `${username.trim().toLowerCase()}@kinglove69.com`;
@@ -23,7 +23,7 @@ function toast(message) {
 
 function requireSb() {
   if (!sb) {
-    toast("Supabase chÆ°a Ä‘Æ°á»£c cáº¥u hÃ¬nh");
+    toast("Supabase chưa được cấu hình");
     return false;
   }
   return true;
@@ -38,7 +38,7 @@ if (loginForm) {
     const username = loginForm.querySelector('input[name="username"]').value.trim();
     const password = loginForm.querySelector('input[name="password"]').value;
     if (!username || !password) {
-      toast("Vui lÃ²ng nháº­p tÃªn Ä‘Äƒng kÃ½ vÃ  máº­t kháº©u");
+      toast("Vui lòng nhập tên đăng ký và mật khẩu");
       return;
     }
     const { data, error } = await sb.auth.signInWithPassword({
@@ -46,7 +46,7 @@ if (loginForm) {
       password,
     });
     if (error) {
-      toast("ÄÄƒng nháº­p tháº¥t báº¡i: " + error.message);
+      toast("Đăng nhập thất bại: " + error.message);
       return;
     }
     // Redirect admin to admin panel, members to profile
@@ -55,7 +55,7 @@ if (loginForm) {
   });
 }
 
-// ===== REGISTER form (register.html) â€” has invite_code field =====
+// ===== REGISTER form (register.html) — has invite_code field =====
 const registerForm = document.querySelector('form input[name="invite_code"]')?.closest("form");
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
@@ -67,19 +67,19 @@ if (registerForm) {
     const inviteCode = registerForm.querySelector('input[name="invite_code"]').value.trim();
 
     if (!username || !password) {
-      toast("Vui lÃ²ng Ä‘iá»n Ä‘á»§ thÃ´ng tin");
+      toast("Vui lòng điền đủ thông tin");
       return;
     }
     if (!inviteCode) {
-      toast("MÃ£ má»i lÃ  báº¯t buá»™c");
+      toast("Mã mời là bắt buộc");
       return;
     }
     if (password.length < 6) {
-      toast("Máº­t kháº©u pháº£i cÃ³ Ã­t nháº¥t 6 kÃ½ tá»±");
+      toast("Mật khẩu phải có ít nhất 6 ký tự");
       return;
     }
     if (password !== confirm) {
-      toast("Máº­t kháº©u xÃ¡c nháº­n khÃ´ng khá»›p");
+      toast("Mật khẩu xác nhận không khớp");
       return;
     }
 
@@ -89,11 +89,11 @@ if (registerForm) {
       .eq("status", "active")
       .maybeSingle();
     if (codeError) {
-      toast("Kiá»ƒm tra mÃ£ má»i tháº¥t báº¡i: " + codeError.message);
+      toast("Kiểm tra mã mời thất bại: " + codeError.message);
       return;
     }
     if (!validCode) {
-      toast("MÃ£ má»i khÃ´ng há»£p lá»‡ hoáº·c Ä‘Ã£ bá»‹ vÃ´ hiá»‡u hÃ³a");
+      toast("Mã mời không hợp lệ hoặc đã bị vô hiệu hóa");
       return;
     }
 
@@ -105,15 +105,15 @@ if (registerForm) {
       },
     });
     if (error) {
-      toast("ÄÄƒng kÃ½ tháº¥t báº¡i: " + error.message);
+      toast("Đăng ký thất bại: " + error.message);
       return;
     }
-    toast("ÄÄƒng kÃ½ thÃ nh cÃ´ng, Ä‘ang chuyá»ƒn sang Ä‘Äƒng nháº­pâ€¦");
+    toast("Đăng ký thành công, đang chuyển sang đăng nhập…");
     setTimeout(() => (window.location.href = "./index.html"), 1500);
   });
 }
 
-// ===== FORGOT PASSWORD form (forgot-password.html) â€” has otp field =====
+// ===== FORGOT PASSWORD form (forgot-password.html) — has otp field =====
 const forgotForm = document.querySelector('form input[name="otp"]')?.closest("form");
 if (forgotForm) {
   forgotForm.addEventListener("submit", async (e) => {
@@ -124,11 +124,11 @@ if (forgotForm) {
     const confirm = forgotForm.querySelector('input[name="new_password_confirm"]').value;
 
     if (!username || !newPassword) {
-      toast("Vui lÃ²ng Ä‘iá»n Ä‘á»§ thÃ´ng tin");
+      toast("Vui lòng điền đủ thông tin");
       return;
     }
     if (newPassword !== confirm) {
-      toast("Máº­t kháº©u xÃ¡c nháº­n khÃ´ng khá»›p");
+      toast("Mật khẩu xác nhận không khớp");
       return;
     }
     // Stub: a real reset flow needs OTP verification. For demo, send a reset email.
@@ -136,30 +136,30 @@ if (forgotForm) {
       redirectTo: window.location.origin + "/index.html",
     });
     if (error) {
-      toast("Gá»­i yÃªu cáº§u tháº¥t báº¡i: " + error.message);
+      toast("Gửi yêu cầu thất bại: " + error.message);
       return;
     }
-    toast("ÄÃ£ gá»­i yÃªu cáº§u Ä‘áº·t láº¡i máº­t kháº©u");
+    toast("Đã gửi yêu cầu đặt lại mật khẩu");
   });
 
-  // "Gá»­i mÃ£" button
+  // "Gửi mã" button
   const sendOtpBtn = forgotForm.querySelector(".field-action");
   if (sendOtpBtn) {
     sendOtpBtn.addEventListener("click", async () => {
       if (!requireSb()) return;
       const username = forgotForm.querySelector('input[name="username"]').value.trim();
       if (!username) {
-        toast("Nháº­p tÃªn Ä‘Äƒng kÃ½ trÆ°á»›c");
+        toast("Nhập tên đăng ký trước");
         return;
       }
       const { error } = await sb.auth.signInWithOtp({
         email: syntheticEmail(username),
       });
       if (error) {
-        toast("Gá»­i mÃ£ tháº¥t báº¡i: " + error.message);
+        toast("Gửi mã thất bại: " + error.message);
         return;
       }
-      toast("ÄÃ£ gá»­i mÃ£ (kiá»ƒm tra email)");
+      toast("Đã gửi mã (kiểm tra email)");
     });
   }
 }

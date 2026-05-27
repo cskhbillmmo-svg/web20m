@@ -1,7 +1,7 @@
-﻿-- =====================================================================
--- Kinglove69 â€” Admin role + VOTE game schema (matches admin.js)
+-- =====================================================================
+-- Kinglove69 — Admin role + VOTE game schema (matches admin.js)
 -- Run in Supabase SQL Editor AFTER supabase-schema.sql.
--- Idempotent â€” safe to re-run.
+-- Idempotent — safe to re-run.
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -68,7 +68,7 @@ create policy "rounds admin write" on public.vote_rounds
   for all using (public.is_admin()) with check (public.is_admin());
 
 -- ---------------------------------------------------------------------
--- 3. VOTE HISTORY  (existing table â€” extend with bet fields)
+-- 3. VOTE HISTORY  (existing table — extend with bet fields)
 --    Keep old columns (vote_type, amount, result, is_secret) for back-compat.
 -- ---------------------------------------------------------------------
 alter table public.vote_history
@@ -110,7 +110,7 @@ create policy "bets insert own" on public.vote_history for insert with check (au
 create policy "bets admin all"  on public.vote_history for all using (public.is_admin()) with check (public.is_admin());
 
 -- ---------------------------------------------------------------------
--- 4. VIEW â€” stats per round (used in admin grid + tables)
+-- 4. VIEW — stats per round (used in admin grid + tables)
 -- ---------------------------------------------------------------------
 create or replace view public.vote_round_stats as
 select
@@ -139,7 +139,7 @@ left join lateral (
 grant select on public.vote_round_stats to anon, authenticated;
 
 -- ---------------------------------------------------------------------
--- 5. RPC â€” place a bet (member side, used by lottery.js)
+-- 5. RPC — place a bet (member side, used by lottery.js)
 -- ---------------------------------------------------------------------
 create or replace function public.place_vote_bet(
   p_round_id bigint,
@@ -176,7 +176,7 @@ begin
 
   insert into public.transactions(user_id, type, amount, status, note, metadata)
     values (v_user_id, 'vote', p_amount, 'success',
-            'Äáº·t cÆ°á»£c VOTE' || v_round.vote_type::text || ' - ' || v_round.round_no,
+            'Đặt cược VOTE' || v_round.vote_type::text || ' - ' || v_round.round_no,
             jsonb_build_object('bet_id', v_bet.id, 'round_id', p_round_id, 'choice', p_choice));
 
   return v_bet;
@@ -185,7 +185,7 @@ end $$;
 grant execute on function public.place_vote_bet(bigint, text, integer) to authenticated;
 
 -- ---------------------------------------------------------------------
--- 6. RPC â€” admin settles a round
+-- 6. RPC — admin settles a round
 --    Rule: bet wins if its choice (single token OR comma list) shares at least
 --    one token with the winning string.  Payout = amount * multiplier.
 -- ---------------------------------------------------------------------
@@ -223,7 +223,7 @@ begin
         where id = r.user_id;
       insert into public.transactions(user_id, type, amount, status, note, metadata)
         values (r.user_id, 'reward', v_payout, 'success',
-                'Tháº¯ng VOTE - ' || v_round.round_no,
+                'Thắng VOTE - ' || v_round.round_no,
                 jsonb_build_object('bet_id', r.id, 'round_id', p_round_id));
       v_winners := v_winners + 1;
       v_total   := v_total + v_payout;
@@ -238,7 +238,7 @@ end $$;
 grant execute on function public.settle_round(bigint, text) to authenticated;
 
 -- ---------------------------------------------------------------------
--- 7. RPC â€” admin adjust balance (used by Users tab "Sá»­a sá»‘ dÆ°")
+-- 7. RPC — admin adjust balance (used by Users tab "Sửa số dư")
 -- ---------------------------------------------------------------------
 create or replace function public.admin_set_balance(
   p_user_id uuid,
@@ -262,7 +262,7 @@ end $$;
 grant execute on function public.admin_set_balance(uuid, integer, text) to authenticated;
 
 -- ---------------------------------------------------------------------
--- 8. Seed: one open round per game type (so admin grid khÃ´ng trá»‘ng)
+-- 8. Seed: one open round per game type (so admin grid không trống)
 -- ---------------------------------------------------------------------
 insert into public.vote_rounds (vote_type, round_no, multiplier, close_at) values
   (1, to_char(now(), 'YYYYMMDD') || '-001', 2.0, now() + interval '10 minutes'),

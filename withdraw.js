@@ -7,8 +7,8 @@ const ruleLink = document.querySelector("[data-action='show-rule']");
 const ruleModal = document.querySelector('[data-modal="rule"]');
 const fmt = new Intl.NumberFormat("vi-VN");
 
-const MIN_K = 3000;
-const MAX_K = 1000000; // Giới hạn tối đa 1.000.000 (ô K) ~ 1 tỷ VND mỗi lần rút
+const MIN_K = 1;
+const MAX_K = 1000; // Giới hạn tối đa 1000 điểm (ô K) mỗi lần rút
 
 let user = null;
 let balanceK = 0;
@@ -44,7 +44,7 @@ amountInput.addEventListener("input", () => {
 
 // "Tất cả" — fill 100% balance (chỉ fill nếu > 0)
 fillAllBtn.addEventListener("click", () => {
-  if (balanceK > 0) amountInput.value = String(balanceK);
+  if (balanceK > 0) amountInput.value = String(Math.min(balanceK, MAX_K));
   else amountInput.value = "";
 });
 
@@ -60,8 +60,7 @@ document.querySelectorAll("[data-close]").forEach((b) => {
 submitBtn.addEventListener("click", async () => {
   const k = Number(amountInput.value) || 0;
   if (k <= 0) { toast("Vui lòng điền số tiền chính xác"); return; }
-  if (k < MIN_K) { toast(`Thấp nhất ${MIN_K} điểm tương đương ${MIN_K}K`); return; }
-  if (k > MAX_K) { toast(`Tối đa ${fmt.format(MAX_K)}K mỗi lần rút`); return; }
+  if (k > MAX_K) { toast(`Tối đa ${fmt.format(MAX_K)} điểm tương đương ${fmt.format(MAX_K)}K`); return; }
   if (k > balanceK) { toast("Số dư không đủ"); return; }
 
   // Bank check — match cutoraclb redirect-to-bank flow

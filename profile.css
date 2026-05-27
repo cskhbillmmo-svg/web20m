@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --screen-width: 430px;
   --screen-height: 932px;
   --green: #18552e;
@@ -1324,7 +1324,7 @@ button.nav-logo {
   line-height: 1.4;
 }
 
-/* ===== Há»“ sÆ¡ rÃºt tiá»n (record list) â€” match cutoraclb ===== */
+/* ===== Hồ sơ rút tiền (record list) — match cutoraclb ===== */
 .record-page {
   position: relative;
   min-height: min(100vh, var(--screen-height));
@@ -1422,7 +1422,7 @@ button.nav-logo {
   line-height: 1.55;
 }
 
-/* ===== Settings page (cÃ i Ä‘áº·t) ===== */
+/* ===== Settings page (cài đặt) ===== */
 .settings-page {
   position: relative;
   min-height: min(100vh, var(--screen-height));
@@ -1590,7 +1590,7 @@ button.nav-logo {
 .uc-btn:hover { filter: brightness(1.06); }
 .uc-btn:active { transform: scale(0.98); }
 
-/* ===== Change password form (settings â†’ máº­t kháº©u Ä‘Äƒng nháº­p) ===== */
+/* ===== Change password form (settings → mật khẩu đăng nhập) ===== */
 .pw-form {
   margin: 16px;
   padding: 18px;
@@ -1638,7 +1638,7 @@ button.nav-logo {
 .pw-submit:hover { filter: brightness(1.08); }
 .pw-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* ===== Trung tÃ¢m rÃºt tiá»n (withdraw.html) ===== */
+/* ===== Trung tâm rút tiền (withdraw.html) ===== */
 .withdraw-center {
   position: relative;
   min-height: min(100vh, var(--screen-height));

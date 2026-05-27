@@ -1,9 +1,9 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Â· Kinglove69</title>
+    <title>Admin · Kinglove69</title>
     <link rel="stylesheet" href="./admin.css" />
   </head>
   <body>
@@ -18,13 +18,13 @@
         </button>
         <button class="tab" data-tab="users" type="button">Users</button>
         <button class="tab" data-tab="withdraws" type="button">
-          RÃºt tiá»n<span class="tab-badge" data-badge="withdraws" hidden>0</span>
+          Rút tiền<span class="tab-badge" data-badge="withdraws" hidden>0</span>
         </button>
         <button class="tab" data-tab="dashboard" type="button">Dashboard</button>
       </nav>
       <div class="admin-user">
-        <span data-admin-name>â€”</span>
-        <button class="logout-btn" type="button" data-action="admin-logout">ÄÄƒng xuáº¥t</button>
+        <span data-admin-name>—</span>
+        <button class="logout-btn" type="button" data-action="admin-logout">Đăng xuất</button>
       </div>
     </header>
 
@@ -32,12 +32,12 @@
       <!-- ===== VOTE TAB ===== -->
       <section class="tab-panel is-active" data-panel="votes">
         <div class="panel-head">
-          <h1>Quáº£n lÃ½ VOTE</h1>
-          <button class="btn-primary" type="button" data-action="open-create-round">+ Táº¡o round má»›i</button>
+          <h1>Quản lý VOTE</h1>
+          <button class="btn-primary" type="button" data-action="open-create-round">+ Tạo round mới</button>
         </div>
 
         <div class="filter-chips" data-vote-filter>
-          <button class="chip is-active" data-filter="all" type="button">Táº¥t cáº£</button>
+          <button class="chip is-active" data-filter="all" type="button">Tất cả</button>
           <button class="chip" data-filter="1" type="button">VOTE 1</button>
           <button class="chip" data-filter="2" type="button">VOTE 2</button>
           <button class="chip" data-filter="3" type="button">VOTE 3</button>
@@ -45,27 +45,27 @@
 
         <section class="card">
           <div class="card-head">
-            <h2>Round Ä‘ang má»Ÿ / chá» settle</h2>
+            <h2>Round đang mở / chờ settle</h2>
             <label class="auto-refresh">
               <input type="checkbox" data-auto-refresh checked />
-              <span>Tá»± refresh 15s</span>
+              <span>Tự refresh 15s</span>
             </label>
           </div>
           <div class="rounds-grid" data-open-rounds>
-            <p class="muted">Äang táº£iâ€¦</p>
+            <p class="muted">Đang tải…</p>
           </div>
         </section>
 
         <section class="card">
           <div class="card-head">
-            <h2>PhÃ¢n bá»‘ cÆ°á»£c Â· Quick settle</h2>
-            <span class="muted" data-current-round-label>(chÆ°a chá»n round)</span>
+            <h2>Phân bố cược · Quick settle</h2>
+            <span class="muted" data-current-round-label>(chưa chọn round)</span>
           </div>
           <div class="choice-distribution" data-choice-dist>
-            <p class="muted">Chá»n round bÃªn trÃªn Ä‘á»ƒ xem phÃ¢n bá»‘ cÆ°á»£c</p>
+            <p class="muted">Chọn round bên trên để xem phân bố cược</p>
           </div>
           <div class="settle-bar" data-settle-bar hidden>
-            <label>Hoáº·c tÃ¹y chá»‰nh: <input type="text" data-settle-winning placeholder="A / B / 1 / 2 â€¦" /></label>
+            <label>Hoặc tùy chỉnh: <input type="text" data-settle-winning placeholder="A / B / 1 / 2 …" /></label>
             <button class="btn-danger" type="button" data-action="settle-round">Settle round</button>
             <span class="muted" data-settle-hint></span>
           </div>
@@ -73,8 +73,8 @@
 
         <section class="card">
           <div class="card-head">
-            <h2>Bets chi tiáº¿t</h2>
-            <span class="muted" data-bet-count>â€”</span>
+            <h2>Bets chi tiết</h2>
+            <span class="muted" data-bet-count>—</span>
           </div>
           <div class="bets-table-wrap">
             <table class="bets-table" data-bets-table>
@@ -90,14 +90,14 @@
                 </tr>
               </thead>
               <tbody data-bets-body>
-                <tr><td colspan="7" class="muted">Chá»n round bÃªn trÃªn Ä‘á»ƒ xem bets</td></tr>
+                <tr><td colspan="7" class="muted">Chọn round bên trên để xem bets</td></tr>
               </tbody>
             </table>
           </div>
         </section>
 
         <section class="card">
-          <h2>Táº¥t cáº£ round gáº§n Ä‘Ã¢y</h2>
+          <h2>Tất cả round gần đây</h2>
           <div class="bets-table-wrap">
             <table class="bets-table">
               <thead>
@@ -105,15 +105,15 @@
                   <th>VOTE</th>
                   <th>Round</th>
                   <th>Status</th>
-                  <th class="num">Ã—</th>
+                  <th class="num">×</th>
                   <th class="num">Bets</th>
                   <th class="num">Total</th>
                   <th>Winning</th>
-                  <th>Má»Ÿ lÃºc</th>
+                  <th>Mở lúc</th>
                 </tr>
               </thead>
               <tbody data-all-rounds-body>
-                <tr><td colspan="8" class="muted">Äang táº£iâ€¦</td></tr>
+                <tr><td colspan="8" class="muted">Đang tải…</td></tr>
               </tbody>
             </table>
           </div>
@@ -123,10 +123,10 @@
       <!-- ===== USERS TAB ===== -->
       <section class="tab-panel" data-panel="users" hidden>
         <div class="panel-head">
-          <h1>NgÆ°á»i dÃ¹ng</h1>
-          <button class="btn-primary" type="button" data-action="open-create-invite">+ Táº¡o mÃ£ giá»›i thiá»‡u</button>
+          <h1>Người dùng</h1>
+          <button class="btn-primary" type="button" data-action="open-create-invite">+ Tạo mã giới thiệu</button>
         </div>
-        <input class="search-input" type="search" placeholder="TÃ¬m usernameâ€¦" data-user-search />
+        <input class="search-input" type="search" placeholder="Tìm username…" data-user-search />
         <section class="card">
           <div class="bets-table-wrap">
             <table class="bets-table">
@@ -136,12 +136,12 @@
                   <th>Role</th>
                   <th class="num">Balance</th>
                   <th class="num">Vote pts</th>
-                  <th>NgÃ y táº¡o</th>
-                  <th>HÃ nh Ä‘á»™ng</th>
+                  <th>Ngày tạo</th>
+                  <th>Hành động</th>
                 </tr>
               </thead>
               <tbody data-users-body>
-                <tr><td colspan="6" class="muted">Äang táº£iâ€¦</td></tr>
+                <tr><td colspan="6" class="muted">Đang tải…</td></tr>
               </tbody>
             </table>
           </div>
@@ -149,22 +149,22 @@
 
         <section class="card">
           <div class="card-head">
-            <h2>MÃ£ giá»›i thiá»‡u</h2>
-            <span class="muted">User chá»‰ cÃ³ thá»ƒ Ä‘Äƒng kÃ½ khi nháº­p mÃ£ do admin phÃ¡t hÃ nh.</span>
+            <h2>Mã giới thiệu</h2>
+            <span class="muted">User chỉ có thể đăng ký khi nhập mã do admin phát hành.</span>
           </div>
           <div class="bets-table-wrap">
             <table class="bets-table">
               <thead>
                 <tr>
-                  <th>MÃ£</th>
-                  <th>Tráº¡ng thÃ¡i</th>
-                  <th>NgÆ°á»i táº¡o</th>
-                  <th>Táº¡o lÃºc</th>
-                  <th>HÃ nh Ä‘á»™ng</th>
+                  <th>Mã</th>
+                  <th>Trạng thái</th>
+                  <th>Người tạo</th>
+                  <th>Tạo lúc</th>
+                  <th>Hành động</th>
                 </tr>
               </thead>
               <tbody data-invite-codes-body>
-                <tr><td colspan="5" class="muted">Äang táº£iâ€¦</td></tr>
+                <tr><td colspan="5" class="muted">Đang tải…</td></tr>
               </tbody>
             </table>
           </div>
@@ -174,12 +174,12 @@
       <!-- ===== WITHDRAW APPROVAL TAB ===== -->
       <section class="tab-panel" data-panel="withdraws" hidden>
         <div class="panel-head">
-          <h1>Duyá»‡t rÃºt tiá»n</h1>
+          <h1>Duyệt rút tiền</h1>
           <div class="filter-chips" data-w-filter>
-            <button class="chip is-active" data-w-status="pending" type="button">Chá» duyá»‡t</button>
-            <button class="chip" data-w-status="success" type="button">ÄÃ£ duyá»‡t</button>
-            <button class="chip" data-w-status="cancelled" type="button">ÄÃ£ tá»« chá»‘i</button>
-            <button class="chip" data-w-status="all" type="button">Táº¥t cáº£</button>
+            <button class="chip is-active" data-w-status="pending" type="button">Chờ duyệt</button>
+            <button class="chip" data-w-status="success" type="button">Đã duyệt</button>
+            <button class="chip" data-w-status="cancelled" type="button">Đã từ chối</button>
+            <button class="chip" data-w-status="all" type="button">Tất cả</button>
           </div>
         </div>
         <section class="card">
@@ -188,16 +188,16 @@
               <thead>
                 <tr>
                   <th>User</th>
-                  <th class="num">Sá»‘ tiá»n (K)</th>
-                  <th>NgÃ¢n hÃ ng</th>
-                  <th>Ghi chÃº</th>
+                  <th class="num">Số tiền (K)</th>
+                  <th>Ngân hàng</th>
+                  <th>Ghi chú</th>
                   <th>Status</th>
-                  <th>Táº¡o lÃºc</th>
-                  <th>HÃ nh Ä‘á»™ng</th>
+                  <th>Tạo lúc</th>
+                  <th>Hành động</th>
                 </tr>
               </thead>
               <tbody data-withdraws-body>
-                <tr><td colspan="7" class="muted">Äang táº£iâ€¦</td></tr>
+                <tr><td colspan="7" class="muted">Đang tải…</td></tr>
               </tbody>
             </table>
           </div>
@@ -206,12 +206,12 @@
 
       <!-- ===== DASHBOARD TAB ===== -->
       <section class="tab-panel" data-panel="dashboard" hidden>
-        <h1>Tá»•ng quan</h1>
+        <h1>Tổng quan</h1>
         <div class="stat-grid">
-          <div class="stat-card"><span>Tá»•ng user</span><strong data-stat="user_count">â€”</strong></div>
-          <div class="stat-card"><span>Round Ä‘ang má»Ÿ</span><strong data-stat="open_rounds">â€”</strong></div>
-          <div class="stat-card"><span>Bets hÃ´m nay</span><strong data-stat="bets_today">â€”</strong></div>
-          <div class="stat-card"><span>Tá»•ng cÆ°á»£c (Ä‘)</span><strong data-stat="amount_today">â€”</strong></div>
+          <div class="stat-card"><span>Tổng user</span><strong data-stat="user_count">—</strong></div>
+          <div class="stat-card"><span>Round đang mở</span><strong data-stat="open_rounds">—</strong></div>
+          <div class="stat-card"><span>Bets hôm nay</span><strong data-stat="bets_today">—</strong></div>
+          <div class="stat-card"><span>Tổng cược (đ)</span><strong data-stat="amount_today">—</strong></div>
         </div>
       </section>
     </main>
@@ -219,22 +219,22 @@
     <!-- Adjust balance modal -->
     <dialog class="modal" data-modal="adjust-balance">
       <form method="dialog">
-        <h3>Äiá»u chá»‰nh Ä‘iá»ƒm</h3>
-        <p class="muted" data-adjust-user>â€”</p>
-        <p>Sá»‘ dÆ° hiá»‡n táº¡i: <strong data-adjust-current>â€”</strong></p>
+        <h3>Điều chỉnh điểm</h3>
+        <p class="muted" data-adjust-user>—</p>
+        <p>Số dư hiện tại: <strong data-adjust-current>—</strong></p>
         <div class="adjust-toggle">
-          <button type="button" data-adjust-mode="add" class="is-active">+ Cá»™ng</button>
-          <button type="button" data-adjust-mode="sub">âˆ’ Trá»«</button>
+          <button type="button" data-adjust-mode="add" class="is-active">+ Cộng</button>
+          <button type="button" data-adjust-mode="sub">− Trừ</button>
         </div>
-        <label>Sá»‘ Ä‘iá»ƒm
+        <label>Số điểm
           <input name="amount" type="number" min="1" step="1" placeholder="VD: 100000" required />
         </label>
-        <label>Ghi chÃº (tÃ¹y chá»n)
-          <input name="note" placeholder="VD: thÆ°á»Ÿng VOTE, pháº¡t vi pháº¡mâ€¦" />
+        <label>Ghi chú (tùy chọn)
+          <input name="note" placeholder="VD: thưởng VOTE, phạt vi phạm…" />
         </label>
         <div class="modal-actions">
-          <button type="button" data-action="close-modal">Há»§y</button>
-          <button class="btn-primary" type="button" data-action="submit-adjust">XÃ¡c nháº­n</button>
+          <button type="button" data-action="close-modal">Hủy</button>
+          <button class="btn-primary" type="button" data-action="submit-adjust">Xác nhận</button>
         </div>
       </form>
     </dialog>
@@ -242,21 +242,21 @@
     <!-- Bank edit modal -->
     <dialog class="modal" data-modal="edit-bank">
       <form method="dialog">
-        <h3>TÃ i khoáº£n ngÃ¢n hÃ ng</h3>
-        <p class="muted" data-bank-user-label>â€”</p>
-        <label>TÃªn ngÃ¢n hÃ ng
+        <h3>Tài khoản ngân hàng</h3>
+        <p class="muted" data-bank-user-label>—</p>
+        <label>Tên ngân hàng
           <input name="bank_name" required />
         </label>
-        <label>Sá»‘ tÃ i khoáº£n
+        <label>Số tài khoản
           <input name="account_number" required />
         </label>
-        <label>Chá»§ tÃ i khoáº£n
+        <label>Chủ tài khoản
           <input name="account_holder" required />
         </label>
         <div class="modal-actions">
-          <button type="button" data-action="close-modal">Há»§y</button>
-          <button type="button" data-action="delete-bank" class="btn-danger">XÃ³a bank</button>
-          <button class="btn-primary" type="button" data-action="submit-edit-bank">LÆ°u</button>
+          <button type="button" data-action="close-modal">Hủy</button>
+          <button type="button" data-action="delete-bank" class="btn-danger">Xóa bank</button>
+          <button class="btn-primary" type="button" data-action="submit-edit-bank">Lưu</button>
         </div>
       </form>
     </dialog>
@@ -264,7 +264,7 @@
     <!-- Create-round modal -->
     <dialog class="modal" data-modal="create-round">
       <form method="dialog">
-        <h3>Táº¡o round má»›i</h3>
+        <h3>Tạo round mới</h3>
         <label>VOTE type
           <select name="vote_type" required>
             <option value="1">VOTE 1</option>
@@ -275,15 +275,15 @@
         <label>Round no
           <input name="round_no" required placeholder="VD: 20260515-001" />
         </label>
-        <label>Há»‡ sá»‘ nhÃ¢n (multiplier)
+        <label>Hệ số nhân (multiplier)
           <input name="multiplier" type="number" step="0.1" min="1" value="2" required />
         </label>
-        <label>ÄÃ³ng lÃºc (tÃ¹y chá»n)
+        <label>Đóng lúc (tùy chọn)
           <input name="close_at" type="datetime-local" />
         </label>
         <div class="modal-actions">
-          <button type="button" data-action="close-modal">Há»§y</button>
-          <button class="btn-primary" type="button" data-action="submit-create-round">Táº¡o</button>
+          <button type="button" data-action="close-modal">Hủy</button>
+          <button class="btn-primary" type="button" data-action="submit-create-round">Tạo</button>
         </div>
       </form>
     </dialog>
@@ -291,13 +291,13 @@
     <!-- Create-invite modal -->
     <dialog class="modal" data-modal="create-invite">
       <form method="dialog">
-        <h3>Táº¡o mÃ£ giá»›i thiá»‡u</h3>
-        <label>MÃ£ giá»›i thiá»‡u
+        <h3>Tạo mã giới thiệu</h3>
+        <label>Mã giới thiệu
           <input name="code" placeholder="VD: KLG12345" required />
         </label>
         <div class="modal-actions">
-          <button type="button" data-action="close-modal">Há»§y</button>
-          <button class="btn-primary" type="button" data-action="submit-create-invite">Táº¡o mÃ£</button>
+          <button type="button" data-action="close-modal">Hủy</button>
+          <button class="btn-primary" type="button" data-action="submit-create-invite">Tạo mã</button>
         </div>
       </form>
     </dialog>
@@ -307,23 +307,23 @@
     <!-- User withdraw history modal -->
     <dialog class="modal user-history-modal" data-modal="withdraw-history">
       <div class="user-history-head">
-        <h3 data-wh-user>Lá»‹ch sá»­ rÃºt tiá»n</h3>
-        <button type="button" class="btn-link" data-action="close-modal">ÄÃ³ng</button>
+        <h3 data-wh-user>Lịch sử rút tiền</h3>
+        <button type="button" class="btn-link" data-action="close-modal">Đóng</button>
       </div>
-      <div class="user-history-stats" data-wh-stats>â€”</div>
+      <div class="user-history-stats" data-wh-stats>—</div>
       <div class="bets-table-wrap">
         <table class="bets-table">
           <thead>
             <tr>
-              <th class="num">Sá»‘ tiá»n</th>
+              <th class="num">Số tiền</th>
               <th>Status</th>
-              <th>Ghi chÃº</th>
-              <th>Táº¡o lÃºc</th>
-              <th>Xá»­ lÃ½ lÃºc</th>
+              <th>Ghi chú</th>
+              <th>Tạo lúc</th>
+              <th>Xử lý lúc</th>
             </tr>
           </thead>
           <tbody data-wh-body>
-            <tr><td colspan="5" class="muted">Äang táº£iâ€¦</td></tr>
+            <tr><td colspan="5" class="muted">Đang tải…</td></tr>
           </tbody>
         </table>
       </div>
@@ -332,10 +332,10 @@
     <!-- User VOTE history modal -->
     <dialog class="modal user-history-modal" data-modal="user-history">
       <div class="user-history-head">
-        <h3 data-history-user>Lá»‹ch sá»­ VOTE</h3>
-        <button type="button" class="btn-link" data-action="close-modal">ÄÃ³ng</button>
+        <h3 data-history-user>Lịch sử VOTE</h3>
+        <button type="button" class="btn-link" data-action="close-modal">Đóng</button>
       </div>
-      <div class="user-history-stats" data-history-stats>â€”</div>
+      <div class="user-history-stats" data-history-stats>—</div>
       <div class="bets-table-wrap">
         <table class="bets-table">
           <thead>
@@ -350,7 +350,7 @@
             </tr>
           </thead>
           <tbody data-history-body>
-            <tr><td colspan="7" class="muted">Äang táº£iâ€¦</td></tr>
+            <tr><td colspan="7" class="muted">Đang tải…</td></tr>
           </tbody>
         </table>
       </div>
@@ -359,12 +359,12 @@
     <!-- Custom confirm / prompt modal -->
     <dialog class="modal admin-confirm" data-confirm-modal>
       <div class="confirm-body">
-        <h3 data-confirm-title>XÃ¡c nháº­n</h3>
+        <h3 data-confirm-title>Xác nhận</h3>
         <p data-confirm-message></p>
         <textarea data-confirm-input rows="2" hidden></textarea>
         <div class="confirm-actions">
-          <button type="button" data-confirm-cancel>Há»§y</button>
-          <button type="button" class="btn-primary" data-confirm-ok>XÃ¡c nháº­n</button>
+          <button type="button" data-confirm-cancel>Hủy</button>
+          <button type="button" class="btn-primary" data-confirm-ok>Xác nhận</button>
         </div>
       </div>
     </dialog>
