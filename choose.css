@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --screen-width: 430px;
   --green: #05532f;
   --page: #f2f2f5;
@@ -243,7 +243,7 @@ img {
 }
 
 .king-logo::before {
-  content: "Onenight";
+  content: "Kinglove69";
   font-family: Georgia, "Times New Roman", serif;
   font-size: 13px;
   font-style: italic;

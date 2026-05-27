@@ -127,6 +127,7 @@ document.querySelector("[data-submit-withdraw]")?.addEventListener("click", asyn
   const amount = Number(f.amount.value);
   const note = f.note.value.trim();
   if (!Number.isFinite(amount) || amount < 10000) { showToast("Số tiền tối thiểu 10.000đ"); return; }
+  if (amount > 1000000000) { showToast("Tối đa 1.000.000.000đ mỗi lần rút"); return; }
 
   // Check balance
   const { data: profile } = await sb.from("profiles").select("balance_points").eq("id", user.id).maybeSingle();

@@ -1,5 +1,5 @@
--- =====================================================================
--- Onenight — Admin & Vote schema (run after supabase-schema.sql)
+﻿-- =====================================================================
+-- Kinglove69 â€” Admin & Vote schema (run after supabase-schema.sql)
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -9,7 +9,7 @@ alter table public.profiles
   add column if not exists role text not null default 'member'
     check (role in ('member','admin'));
 
--- Helper function — avoids recursion in RLS policies
+-- Helper function â€” avoids recursion in RLS policies
 create or replace function public.is_admin(uid uuid)
 returns boolean
 language sql
@@ -50,7 +50,7 @@ create policy "profiles admin update all" on public.profiles
   with check (public.is_admin(auth.uid()));
 
 -- ---------------------------------------------------------------------
--- 2. VOTE rounds — admin creates rounds, sets winning result
+-- 2. VOTE rounds â€” admin creates rounds, sets winning result
 -- ---------------------------------------------------------------------
 create table if not exists public.vote_rounds (
   id           bigserial primary key,
@@ -107,7 +107,7 @@ create policy "vote_history admin all" on public.vote_history
   with check (public.is_admin(auth.uid()));
 
 -- ---------------------------------------------------------------------
--- 4. Settle round — RPC function admin calls to close + auto-payout
+-- 4. Settle round â€” RPC function admin calls to close + auto-payout
 -- ---------------------------------------------------------------------
 create or replace function public.settle_round(p_round_id bigint, p_winning text)
 returns jsonb
@@ -164,7 +164,7 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
--- 5. Place bet — RPC for members (atomic deduct + insert)
+-- 5. Place bet â€” RPC for members (atomic deduct + insert)
 -- ---------------------------------------------------------------------
 create or replace function public.place_bet(p_round_id bigint, p_choice text, p_amount integer)
 returns bigint
@@ -198,7 +198,7 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
--- 6b. Delete round with refund — admin only, atomic
+-- 6b. Delete round with refund â€” admin only, atomic
 -- ---------------------------------------------------------------------
 create or replace function public.delete_round_with_refund(p_round_id bigint)
 returns jsonb
@@ -241,14 +241,14 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
--- 6b2. Bank accounts — chỉ 1 bank/user; admin được sửa của ai cũng được
+-- 6b2. Bank accounts â€” chá»‰ 1 bank/user; admin Ä‘Æ°á»£c sá»­a cá»§a ai cÅ©ng Ä‘Æ°á»£c
 -- ---------------------------------------------------------------------
--- Hard limit: mỗi user chỉ có tối đa 1 bank account (unique constraint)
+-- Hard limit: má»—i user chá»‰ cÃ³ tá»‘i Ä‘a 1 bank account (unique constraint)
 create unique index if not exists bank_accounts_one_per_user
   on public.bank_accounts(user_id);
 
--- User chỉ insert nếu chưa có (unique index ở trên enforce)
--- User KHÔNG được update/delete bank của mình (chỉ admin được sửa)
+-- User chá»‰ insert náº¿u chÆ°a cÃ³ (unique index á»Ÿ trÃªn enforce)
+-- User KHÃ”NG Ä‘Æ°á»£c update/delete bank cá»§a mÃ¬nh (chá»‰ admin Ä‘Æ°á»£c sá»­a)
 drop policy if exists "bank own all" on public.bank_accounts;
 drop policy if exists "bank read own" on public.bank_accounts;
 drop policy if exists "bank insert own" on public.bank_accounts;
@@ -263,14 +263,14 @@ create policy "bank insert own once" on public.bank_accounts
     and not exists (select 1 from public.bank_accounts where user_id = auth.uid())
   );
 
--- Admin full access (read/update/delete cho mọi user)
+-- Admin full access (read/update/delete cho má»i user)
 drop policy if exists "bank admin all" on public.bank_accounts;
 create policy "bank admin all" on public.bank_accounts
   for all using (public.is_admin(auth.uid()))
   with check (public.is_admin(auth.uid()));
 
 -- ---------------------------------------------------------------------
--- 6b3. Transactions — track update time (Trạng thái cột)
+-- 6b3. Transactions â€” track update time (Tráº¡ng thÃ¡i cá»™t)
 -- ---------------------------------------------------------------------
 alter table public.transactions
   add column if not exists updated_at timestamptz not null default now();
@@ -284,7 +284,7 @@ create trigger transactions_touch before update on public.transactions
   for each row execute procedure public.touch_tx_updated_at();
 
 -- ---------------------------------------------------------------------
--- 6c. Transactions — user can insert deposit/withdraw requests
+-- 6c. Transactions â€” user can insert deposit/withdraw requests
 -- ---------------------------------------------------------------------
 drop policy if exists "tx insert own pending" on public.transactions;
 create policy "tx insert own pending" on public.transactions
@@ -300,7 +300,7 @@ create policy "tx admin all" on public.transactions
   with check (public.is_admin(auth.uid()));
 
 -- ---------------------------------------------------------------------
--- 6d. Approve / reject transaction — admin RPC, atomic balance update
+-- 6d. Approve / reject transaction â€” admin RPC, atomic balance update
 -- ---------------------------------------------------------------------
 create or replace function public.approve_transaction(p_tx_id bigint, p_approve boolean)
 returns jsonb
@@ -342,9 +342,9 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
--- 6e. Admin adjust balance — manual +/- points with audit
+-- 6e. Admin adjust balance â€” manual +/- points with audit
 -- ---------------------------------------------------------------------
--- Mở rộng transaction type enum để có 'admin_adjust'
+-- Má»Ÿ rá»™ng transaction type enum Ä‘á»ƒ cÃ³ 'admin_adjust'
 alter table public.transactions drop constraint if exists transactions_type_check;
 alter table public.transactions add constraint transactions_type_check
   check (type in ('deposit','withdraw','vote','reward','refund','admin_adjust'));
@@ -387,7 +387,7 @@ begin
     'admin_adjust',
     abs(p_delta),
     'success',
-    coalesce(nullif(p_note, ''), case when p_delta > 0 then 'Admin cộng điểm' else 'Admin trừ điểm' end)
+    coalesce(nullif(p_note, ''), case when p_delta > 0 then 'Admin cá»™ng Ä‘iá»ƒm' else 'Admin trá»« Ä‘iá»ƒm' end)
       || ' (' || case when p_delta > 0 then '+' else '' end || p_delta::text || ')'
   );
 
@@ -399,7 +399,7 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
--- 6f. Submit withdraw — atomic deduct balance + insert pending tx
+-- 6f. Submit withdraw â€” atomic deduct balance + insert pending tx
 -- ---------------------------------------------------------------------
 create or replace function public.submit_withdraw_request(p_amount integer)
 returns bigint
@@ -414,6 +414,7 @@ declare
 begin
   if uid is null then raise exception 'not authenticated'; end if;
   if p_amount <= 0 then raise exception 'amount must be positive'; end if;
+  if p_amount > 1000000000 then raise exception 'amount exceeds per-withdrawal limit'; end if;
 
   -- Lock row, check balance, deduct atomically
   select balance_points into bal from public.profiles where id = uid for update;
@@ -432,11 +433,11 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
--- 6g. Override approve_transaction để khớp model trừ-ngay
---     - deposit: approve → cộng balance ; reject → no-op
---     - withdraw: balance đã trừ lúc submit
---                 approve → mark success (giữ trừ)
---                 reject  → REFUND balance, mark cancelled
+-- 6g. Override approve_transaction Ä‘á»ƒ khá»›p model trá»«-ngay
+--     - deposit: approve â†’ cá»™ng balance ; reject â†’ no-op
+--     - withdraw: balance Ä‘Ã£ trá»« lÃºc submit
+--                 approve â†’ mark success (giá»¯ trá»«)
+--                 reject  â†’ REFUND balance, mark cancelled
 -- ---------------------------------------------------------------------
 create or replace function public.approve_transaction(p_tx_id bigint, p_approve boolean)
 returns jsonb
@@ -456,7 +457,7 @@ begin
   if not p_approve then
     -- Reject
     if tx.type = 'withdraw' then
-      -- Refund vì user đã bị trừ lúc submit
+      -- Refund vÃ¬ user Ä‘Ã£ bá»‹ trá»« lÃºc submit
       update public.profiles
         set balance_points = balance_points + tx.amount
         where id = tx.user_id;
@@ -471,14 +472,14 @@ begin
       set balance_points = balance_points + tx.amount
       where id = tx.user_id;
   end if;
-  -- withdraw approve: không cần trừ thêm (đã trừ lúc submit)
+  -- withdraw approve: khÃ´ng cáº§n trá»« thÃªm (Ä‘Ã£ trá»« lÃºc submit)
 
   update public.transactions set status = 'success' where id = p_tx_id;
   return jsonb_build_object('id', p_tx_id, 'type', tx.type, 'amount', tx.amount, 'status', 'success');
 end $$;
 
 -- ---------------------------------------------------------------------
--- 6h. Quick place bet — auto-create round nếu chưa có, atomic deduct
+-- 6h. Quick place bet â€” auto-create round náº¿u chÆ°a cÃ³, atomic deduct
 -- ---------------------------------------------------------------------
 create or replace function public.quick_place_bet(
   p_vote_type integer,
@@ -532,12 +533,12 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
--- 6i. Freeze account — admin có thể đóng băng user
+-- 6i. Freeze account â€” admin cÃ³ thá»ƒ Ä‘Ã³ng bÄƒng user
 -- ---------------------------------------------------------------------
 alter table public.profiles
   add column if not exists is_frozen boolean not null default false;
 
--- Override place_bet để check frozen
+-- Override place_bet Ä‘á»ƒ check frozen
 create or replace function public.place_bet(p_round_id bigint, p_choice text, p_amount integer)
 returns bigint
 language plpgsql
@@ -559,7 +560,7 @@ begin
   if r.status <> 'open' then raise exception 'round closed'; end if;
 
   select balance_points, is_frozen into bal, frozen from public.profiles where id = uid for update;
-  if frozen then raise exception 'account frozen — liên hệ CSKH'; end if;
+  if frozen then raise exception 'account frozen â€” liÃªn há»‡ CSKH'; end if;
   if bal < p_amount then raise exception 'insufficient balance'; end if;
 
   update public.profiles set balance_points = balance_points - p_amount where id = uid;
@@ -569,7 +570,7 @@ begin
   return bet_id;
 end $$;
 
--- Override quick_place_bet để check frozen
+-- Override quick_place_bet Ä‘á»ƒ check frozen
 create or replace function public.quick_place_bet(
   p_vote_type integer, p_choice text, p_amount integer
 ) returns bigint
@@ -589,7 +590,7 @@ begin
   if p_vote_type not in (1, 2, 3) then raise exception 'invalid vote_type'; end if;
 
   select balance_points, is_frozen into bal, frozen from public.profiles where id = uid for update;
-  if frozen then raise exception 'account frozen — liên hệ CSKH'; end if;
+  if frozen then raise exception 'account frozen â€” liÃªn há»‡ CSKH'; end if;
   if bal < p_amount then raise exception 'insufficient balance'; end if;
 
   select * into r from public.vote_rounds
@@ -612,7 +613,7 @@ begin
   return bet_id;
 end $$;
 
--- Override submit_withdraw_request để check frozen
+-- Override submit_withdraw_request Ä‘á»ƒ check frozen
 create or replace function public.submit_withdraw_request(p_amount integer)
 returns bigint
 language plpgsql
@@ -627,8 +628,9 @@ declare
 begin
   if uid is null then raise exception 'not authenticated'; end if;
   if p_amount <= 0 then raise exception 'amount must be positive'; end if;
+  if p_amount > 1000000000 then raise exception 'amount exceeds per-withdrawal limit'; end if;
   select balance_points, is_frozen into bal, frozen from public.profiles where id = uid for update;
-  if frozen then raise exception 'account frozen — liên hệ CSKH'; end if;
+  if frozen then raise exception 'account frozen â€” liÃªn há»‡ CSKH'; end if;
   if bal is null then raise exception 'profile not found'; end if;
   if bal < p_amount then raise exception 'insufficient balance'; end if;
   update public.profiles set balance_points = balance_points - p_amount where id = uid;
