@@ -261,6 +261,24 @@
       </form>
     </dialog>
 
+    <!-- Set password modal -->
+    <dialog class="modal" data-modal="set-password">
+      <form method="dialog">
+        <h3>Đổi mật khẩu user</h3>
+        <p class="muted" data-pw-user-label>—</p>
+        <label>Mật khẩu mới
+          <input name="new_password" type="text" minlength="6" placeholder="Ít nhất 6 ký tự" required />
+        </label>
+        <label>Nhập lại mật khẩu
+          <input name="new_password_confirm" type="text" minlength="6" placeholder="Nhập lại mật khẩu mới" required />
+        </label>
+        <div class="modal-actions">
+          <button type="button" data-action="close-modal">Hủy</button>
+          <button class="btn-primary" type="button" data-action="submit-set-password">Lưu mật khẩu</button>
+        </div>
+      </form>
+    </dialog>
+
     <!-- Create-round modal -->
     <dialog class="modal" data-modal="create-round">
       <form method="dialog">

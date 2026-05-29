@@ -236,6 +236,8 @@ function init() {
     else if (a === "user-history") openUserHistory(t.dataset.userId, t.dataset.username);
     else if (a === "user-withdraws") openUserWithdraws(t.dataset.userId, t.dataset.username);
     else if (a === "toggle-freeze") toggleFreeze(t.dataset.userId, t.dataset.username, t.dataset.frozen === "1");
+    else if (a === "set-password") openSetPassword(t.dataset.userId, t.dataset.username);
+    else if (a === "submit-set-password") submitSetPassword();
     else if (a === "approve-withdraw") doApproveWithdraw(Number(t.dataset.wId), true);
     else if (a === "reject-withdraw") doApproveWithdraw(Number(t.dataset.wId), false);
     else if (a === "edit-bank") openBankEdit(t.dataset.userId, t.dataset.username);
@@ -773,6 +775,10 @@ async function loadUsers(search = "") {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 11h10M7 15h6"/></svg>
             <span>${b ? "Sửa bank" : "Thêm bank"}</span>
           </button>
+          <button class="act act--neutral" data-action="set-password" ${ds} title="Đổi mật khẩu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <span>Đổi MK</span>
+          </button>
           <button class="act ${frozen ? 'act--unfreeze' : 'act--freeze'}" data-action="toggle-freeze" ${ds} data-frozen="${frozen ? '1' : '0'}" title="${frozen ? 'Mở khóa tài khoản' : 'Đóng băng tài khoản'}">
             ${frozen
               ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0"/></svg>'
@@ -1259,6 +1265,39 @@ async function submitBankEdit() {
   toast("Đã lưu bank", "success");
   modal.close();
   loadUsers(document.querySelector("[data-user-search]").value.trim());
+}
+
+// ===== Set password for users (admin) =====
+let setPwUserId = null;
+function openSetPassword(userId, username) {
+  setPwUserId = userId;
+  const modal = document.querySelector('[data-modal="set-password"]');
+  modal.querySelector("[data-pw-user-label]").textContent = `User: ${username}`;
+  const f = modal.querySelector("form");
+  f.new_password.value = "";
+  f.new_password_confirm.value = "";
+  modal.showModal();
+  setTimeout(() => f.new_password.focus(), 50);
+}
+
+async function submitSetPassword() {
+  const modal = document.querySelector('[data-modal="set-password"]');
+  const f = modal.querySelector("form");
+  const pw = f.new_password.value;
+  const confirm = f.new_password_confirm.value;
+  if (!pw || pw.length < 6) { toast("Mật khẩu phải có ít nhất 6 ký tự", "error"); return; }
+  if (pw !== confirm) { toast("Mật khẩu xác nhận không khớp", "error"); return; }
+  if (!(await adminConfirm("Đổi mật khẩu mới cho user này?", { title: "Đổi mật khẩu", okText: "Đổi" }))) return;
+
+  const payload = { p_user_id: setPwUserId, p_new_password: pw };
+  let { error } = await sb.rpc("admin_set_user_password", payload);
+  if (error?.message?.toLowerCase?.().includes("forbidden")) {
+    await sb.auth.refreshSession();
+    ({ error } = await sb.rpc("admin_set_user_password", payload));
+  }
+  if (error) { toast(error.message, "error"); return; }
+  toast("Đã đổi mật khẩu", "success");
+  modal.close();
 }
 
 async function deleteBankForUser() {

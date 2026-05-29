@@ -640,6 +640,42 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
+-- 6j. Admin đổi mật khẩu cho user — cập nhật trực tiếp auth.users
+--     (pgcrypto nằm trong schema extensions trên Supabase)
+-- ---------------------------------------------------------------------
+create extension if not exists pgcrypto with schema extensions;
+
+create or replace function public.admin_set_user_password(
+  p_user_id uuid,
+  p_new_password text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, auth, extensions
+as $$
+declare
+  target_email text;
+begin
+  if not public.is_admin(auth.uid()) then
+    raise exception 'forbidden';
+  end if;
+  if p_new_password is null or length(p_new_password) < 6 then
+    raise exception 'password must be at least 6 characters';
+  end if;
+
+  select email into target_email from auth.users where id = p_user_id;
+  if target_email is null then raise exception 'user not found'; end if;
+
+  update auth.users
+    set encrypted_password = extensions.crypt(p_new_password, extensions.gen_salt('bf')),
+        updated_at = now()
+    where id = p_user_id;
+
+  return jsonb_build_object('user_id', p_user_id, 'status', 'password_updated');
+end $$;
+
+-- ---------------------------------------------------------------------
 -- 7. Admin view: bet summary per round
 -- ---------------------------------------------------------------------
 create or replace view public.vote_round_stats as
