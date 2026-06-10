@@ -44,7 +44,7 @@ window.fetchProfile = async function () {
   const profile = await window.fetchProfile();
   if (profile) applyProfile(profile);
   else if (h1) h1.textContent = user.email.split("@")[0];
-  if (sub) sub.textContent = user.email;
+  if (sub) sub.hidden = true;
 
   // Realtime: balance change → cập nhật ngay không cần refresh
   sb.channel(`profile-${user.id}`)
