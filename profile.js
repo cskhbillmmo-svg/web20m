@@ -91,10 +91,10 @@ const actions = {
   "share-invite": () => {
     closeSettings();
     const inviteCode = currentProfile?.invite_code
-      || (currentProfile?.username ? `KLG-${currentProfile.username}` : "KINGLOVE69-1102");
-    const shareText = `Tham gia Kinglove69 cùng tôi! Mã mời: ${inviteCode}`;
+      || (currentProfile?.username ? `ONT-${currentProfile.username}` : "ONNIGHTT-1102");
+    const shareText = `Tham gia onnightt cùng tôi! Mã mời: ${inviteCode}`;
     if (navigator.share) {
-      navigator.share({ title: "Kinglove69", text: shareText }).catch(() => {});
+      navigator.share({ title: "onnightt", text: shareText }).catch(() => {});
     } else if (navigator.clipboard) {
       navigator.clipboard
         .writeText(shareText)

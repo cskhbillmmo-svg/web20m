@@ -1,7 +1,7 @@
 const sb = window.sb;
 
 function syntheticEmail(username) {
-  return `${username.trim().toLowerCase()}@kinglove69.com`;
+  return `${username.trim().toLowerCase()}@onnightt.com`;
 }
 
 function toast(message) {

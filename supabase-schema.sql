@@ -1,5 +1,5 @@
 -- =====================================================================
--- Kinglove69 — Supabase schema
+-- onnightt — Supabase schema
 -- Run this entire file in Supabase SQL Editor (Project → SQL Editor → New query)
 -- It is idempotent: safe to re-run.
 -- =====================================================================
@@ -189,6 +189,6 @@ on conflict (external_id) do nothing;
 -- ---------------------------------------------------------------------
 insert into public.notifications (title, body, audience) values
   ('Hoạt động trên không',
-   'Cảm ơn bạn đã tin tưởng và tìm đến KINGLOVE69 CLB. CLB chúng tôi có thể tồn tại đến bây giờ là dựa vào sự tin tưởng của mọi người và sự ủng hộ nhiệt tình của tất cả các hội viên.',
+   'Cảm ơn bạn đã tin tưởng và tìm đến ONNIGHTT CLB. CLB chúng tôi có thể tồn tại đến bây giờ là dựa vào sự tin tưởng của mọi người và sự ủng hộ nhiệt tình của tất cả các hội viên.',
    'all')
 on conflict do nothing;

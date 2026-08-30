@@ -93,7 +93,7 @@ function showAdminLogin(errorMsg = "") {
     <div class="admin-login-shell">
       <div class="admin-login-card">
         <div class="admin-login-brand">
-          <span class="brand-word">Kinglove69</span>
+          <span class="brand-word">onnightt</span>
         </div>
         <h1>Admin Login</h1>
         ${errorMsg ? `<p class="admin-login-error">${errorMsg}</p>` : ""}
@@ -122,7 +122,7 @@ function showAdminLogin(errorMsg = "") {
     btn.textContent = "Đang đăng nhập…";
 
     await sb.auth.signOut();
-    const email = `${username.toLowerCase()}@kinglove69.com`;
+    const email = `${username.toLowerCase()}@onnightt.com`;
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
     if (error) {
